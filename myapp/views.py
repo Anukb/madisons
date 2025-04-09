@@ -1286,8 +1286,8 @@ def create_announcement(request):
             # Create an announcement notification for the admin user
             Notification.objects.create(
                 user=request.user,
-                title=title,
-                message=message,
+        title=title,
+        message=message,
                 notification_type='announcement',
                 is_read=True  # Admin has read their own announcement
             )
@@ -1366,9 +1366,8 @@ def create_article(request):
             title = request.POST['title']
             description = request.POST['description']
             content = request.POST['content']
-            image = request.FILES.get('image')
             category_id = request.POST['category']
-            status = request.POST['status']
+            status = request.POST.get('status', 'draft')  # Default to draft if not provided
 
             # Get the category object
             category = get_object_or_404(Category, id=category_id)
@@ -1378,7 +1377,6 @@ def create_article(request):
                 title=title,
                 description=description,
                 content=content,
-                image=image,
                 category=category,
                 author=request.user,
                 status=status
@@ -1469,9 +1467,9 @@ def article_dashboard(request):
         published_articles = articles.filter(status='published').select_related('category')
         
         return render(request, 'article_dashboard.html', {
-            'drafts': drafts,
-            'published_articles': published_articles
-        })
+        'drafts': drafts,
+        'published_articles': published_articles
+    })
     except Exception as e:
         print(f"Error loading dashboard: {str(e)}")
         messages.error(request, 'An error occurred while loading your articles. Please try again.')

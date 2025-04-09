@@ -254,4 +254,4 @@ function getCsrfToken() {
 // Initial fetch of notifications
 document.addEventListener('DOMContentLoaded', () => {
     fetchNotifications();
-});
+}); 
