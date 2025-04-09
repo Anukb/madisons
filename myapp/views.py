@@ -160,7 +160,7 @@ def login_view(request):
                 login(request, user)
                 
                 # Create a test notification
-                    Notification.objects.create(
+                Notification.objects.create(
                         user=user,
                     title="Welcome Back!",
                     message=f"Welcome back to Madison Magazine, {user.username}!",
