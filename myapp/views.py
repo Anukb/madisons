@@ -158,15 +158,13 @@ def login_view(request):
             user = authenticate(request, username=user.username, password=password)
             if user is not None:
                 login(request, user)
-                
                 # Create a test notification
-                    Notification.objects.create(
+                Notification.objects.create(
                         user=user,
                     title="Welcome Back!",
                     message=f"Welcome back to Madison Magazine, {user.username}!",
                         is_read=False
                     )
-                
                 return redirect('home')
             else:
                 messages.error(request, 'Invalid email or password.')
@@ -813,19 +811,19 @@ def add_article(request):
             content = request.POST.get('content')
             category_id = request.POST.get('category')
             status = request.POST.get('action', 'draft')  # Get status from form action
-            
+
             # Validate required fields
             if not all([title, description, content, category_id]):
                 messages.error(request, 'Please fill in all required fields.')
                 return redirect('add_article')
 
             # Create article
-        article = Articles.objects.create(
-            title=title,
-            description=description,
-            content=content,
-            category_id=category_id,
-            author=request.user,
+            article = Articles.objects.create(
+                title=title,
+                description=description,
+                content=content,
+                category_id=category_id,
+                author=request.user,
                 status=status
             )
 
@@ -842,12 +840,8 @@ def add_article(request):
                 is_read=False
             )
 
-            # Redirect based on status
             messages.success(request, 'Article saved successfully!')
-            if status == 'draft':
-                return redirect('user_drafts')
-            else:
-        return redirect('article_dashboard')
+            return redirect('user_drafts' if status == 'draft' else 'article_dashboard')
 
         except Exception as e:
             print(f"Error saving article: {str(e)}")
@@ -1292,8 +1286,8 @@ def create_announcement(request):
             # Create an announcement notification for the admin user
             Notification.objects.create(
                 user=request.user,
-        title=title,
-        message=message,
+                title=title,
+                message=message,
                 notification_type='announcement',
                 is_read=True  # Admin has read their own announcement
             )
@@ -1368,27 +1362,34 @@ def generate_summary(request):
 @login_required
 def create_article(request):
     if request.method == 'POST':
-        title = request.POST['title']
-        description = request.POST['description']
-        content = request.POST['content']
-        image = request.FILES.get('image')
-        category_id = request.POST['category']
-        status = request.POST['status']
+        try:
+            title = request.POST['title']
+            description = request.POST['description']
+            content = request.POST['content']
+            image = request.FILES.get('image')
+            category_id = request.POST['category']
+            status = request.POST['status']
 
-        # Get the category object
-        category = get_object_or_404(Category, id=category_id)
+            # Get the category object
+            category = get_object_or_404(Category, id=category_id)
 
-        # Create the article
-        article = Articles.objects.create(
-            title=title,
-            description=description,
-            content=content,
-            image=image,
-            category=category,
-            author=request.user,
-            status=status
-        )
-        return redirect('article_dashboard')
+            # Create the article
+            article = Articles.objects.create(
+                title=title,
+                description=description,
+                content=content,
+                image=image,
+                category=category,
+                author=request.user,
+                status=status
+            )
+            return redirect('article_dashboard')
+        except Exception as e:
+            # Log the error (you can also use Django's logging framework)
+            print(f"Error creating article: {str(e)}")
+            messages.error(request, 'An error occurred while creating the article. Please try again.')
+            return redirect('add_article')  # Redirect back to the article creation page
+
     return render(request, 'write_article.html')
 
 @login_required
@@ -1422,7 +1423,7 @@ def edit_article(request, article_id):
             if request.FILES.get('image'):
                 article.image = request.FILES['image']
             
-        article.save()
+            article.save()
 
             # Create notification
             Notification.objects.create(
@@ -1463,14 +1464,14 @@ def delete_article(request, article_id):
 def article_dashboard(request):
     try:
         # Get user's articles
-    articles = Articles.objects.filter(author=request.user)
+        articles = Articles.objects.filter(author=request.user)
         drafts = articles.filter(status='draft').select_related('category')
         published_articles = articles.filter(status='published').select_related('category')
         
-    return render(request, 'article_dashboard.html', {
-        'drafts': drafts,
-        'published_articles': published_articles
-    })
+        return render(request, 'article_dashboard.html', {
+            'drafts': drafts,
+            'published_articles': published_articles
+        })
     except Exception as e:
         print(f"Error loading dashboard: {str(e)}")
         messages.error(request, 'An error occurred while loading your articles. Please try again.')
