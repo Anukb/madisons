@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Articles - Madison Online Magazine</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard-header">
+        <h1>Your Articles</h1>
+            <a href="{% url 'add_article' %}" class="new-article-btn">Write New Article</a>
+        </div>
+
+        <div class="articles-section">
+        <h2>Published Articles</h2>
+        <div class="articles-list">
+            {% for article in published_articles %}
+                <div class="article-card">
+                        <h3 class="article-title">{{ article.title }}</h3>
+                        <p class="article-description">{{ article.description|truncatewords:30 }}</p>
+                        <div class="article-meta">
+                            <p>Published: {{ article.created_at|date:"F j, Y" }}</p>
+                            <p>Category: {{ article.category.name|default:"Uncategorized" }}</p>
+                        </div>
+                        <div class="article-actions">
+                            <a href="{% url 'article_detail' article.id %}" class="view-btn">View</a>
+                            <a href="{% url 'edit_article' article.id %}" class="edit-btn">Edit</a>
+                            <a href="{% url 'delete_article' article.id %}" class="delete-btn" onclick="return confirm('Are you sure you want to delete this article?')">Delete</a>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="no-articles">
+                        <p>No published articles yet.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="drafts-section">
+            <h2>Draft Articles</h2>
+            <div class="drafts-list">
+                {% for draft in drafts %}
+                    <div class="draft-card">
+                        <h3 class="draft-title">{{ draft.title }}</h3>
+                        <p class="draft-description">{{ draft.description|truncatewords:30 }}</p>
+                        <div class="draft-meta">
+                            <p>Created: {{ draft.created_at|date:"F j, Y" }}</p>
+                            <p>Category: {{ draft.category.name|default:"Uncategorized" }}</p>
+                        </div>
+                        <div class="draft-actions">
+                            <a href="{% url 'edit_article' draft.id %}" class="edit-btn">Continue Editing</a>
+                            <a href="{% url 'delete_article' draft.id %}" class="delete-btn" onclick="return confirm('Are you sure you want to delete this draft?')">Delete</a>
+                        </div>
+                </div>
+            {% empty %}
+                    <div class="no-drafts">
+                        <p>No draft articles found.</p>
+                    </div>
+            {% endfor %}
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

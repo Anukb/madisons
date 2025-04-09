@@ -1,0 +1,179 @@
+:root {
+    --sidebar-width: 280px;
+    --header-height: 60px;
+    --primary-color: #4f5bd5;
+    --secondary-color: #2b2b3a;
+}
+
+.admin-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar Styling */
+.admin-sidebar {
+    width: var(--sidebar-width);
+    background: var(--secondary-color);
+    padding: 1rem;
+    min-height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    overflow-y: auto;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.sidebar-header {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar-header h3 {
+    color: white;
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.admin-sidebar .nav-item {
+    margin: 0.5rem 0;
+}
+
+.admin-sidebar .nav-link {
+    color: rgba(255,255,255,0.8);
+    padding: 0.8rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.admin-sidebar .nav-link:hover,
+.admin-sidebar .nav-link.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.admin-sidebar .nav-link i {
+    width: 24px;
+    text-align: center;
+    margin-right: 0.5rem;
+}
+
+/* Main Content Area */
+.admin-main {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}
+
+/* Stats Cards */
+.stats-card {
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    height: 100%;
+}
+
+.stats-card h3 {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    opacity: 0.8;
+}
+
+.stats-card .h2 {
+    font-size: 2rem;
+    margin: 0;
+    font-weight: bold;
+}
+
+/* Content Sections */
+.content-section {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.content-section.active {
+    display: block;
+}
+
+/* Tables */
+.table {
+    background: white;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    border-bottom-width: 1px;
+}
+
+/* Cards */
+.card {
+    border-radius: 1rem;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Buttons */
+.btn {
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: #3a3a4f;
+}
+
+/* Modal */
+.modal-content {
+    border-radius: 1rem;
+    border: none;
+}
+
+.modal-header {
+    background: #f8f9fa;
+    border-radius: 1rem 1rem 0 0;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .admin-sidebar {
+        transform: translateX(-100%);
+    }
+
+    .admin-sidebar.show {
+        transform: translateX(0);
+    }
+
+    .admin-main {
+        margin-left: 0;
+    }
+
+    .stats-card {
+        margin-bottom: 1rem;
+    }
+} 

@@ -1,0 +1,769 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Madison Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <style>
+    .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+    .admin-sidebar {
+            width: 250px;
+        background-color: #333;
+        color: white;
+            padding-top: 20px;
+        position: fixed;
+        height: 100vh;
+        left: 0;
+        top: 0;
+    }
+
+    .admin-main {
+        flex: 1;
+        margin-left: 250px;
+        padding: 20px;
+    }
+
+    .nav-link {
+        color: #fff;
+        padding: 10px 20px;
+        transition: background-color 0.3s;
+    }
+
+    .nav-link:hover, .nav-link.active {
+        background-color: #444;
+        color: #fff;
+            text-decoration: none;
+    }
+
+    .content-section {
+        display: none;
+    }
+
+    .content-section.active {
+        display: block;
+    }
+
+    .stats-card {
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .stats-card h3 {
+        margin: 0;
+            font-size: 1.1rem;
+    }
+
+    .stats-card p {
+        margin: 10px 0 0;
+        font-size: 2rem;
+        font-weight: bold;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 300px;  /* Fixed height for charts */
+            width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .card {
+        height: 100%;
+        margin-bottom: 20px;
+    }
+
+    .card-body {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-title {
+        margin-bottom: 15px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <!-- Sidebar -->
+    <nav class="admin-sidebar">
+        <div class="sidebar-header">
+            <h3 class="text-center mb-4">Madison Admin</h3>
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a href="#dashboard" class="nav-link active" data-section="dashboard">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#users" class="nav-link" data-section="users">
+                    <i class="fas fa-users"></i> User Management
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#content" class="nav-link" data-section="content">
+                    <i class="fas fa-newspaper"></i> Content Moderation
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#analytics" class="nav-link" data-section="analytics">
+                    <i class="fas fa-chart-line"></i> Analytics
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#complaints" class="nav-link" data-section="complaints">
+                    <i class="fas fa-exclamation-circle"></i> Complaints
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#events" class="nav-link" data-section="events">
+                    <i class="fas fa-calendar"></i> Events
+                </a>
+            </li>
+            <li class="nav-item mt-4">
+                <form action="{% url 'logout' %}" method="post" class="px-3">
+                        {% csrf_token %}
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                    </form>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="content-section active">
+            <h2 class="mb-4">Dashboard Overview</h2>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="stats-card bg-primary text-white">
+                        <h3>Total Users</h3>
+                        <p>{{ total_users }}</p>
+                        <small>{{ new_users_today }} new today</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card bg-success text-white">
+                        <h3>Articles</h3>
+                        <p>{{ total_articles }}</p>
+                        <small>{{ pending_articles }} pending review</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card bg-warning text-white">
+                        <h3>Events</h3>
+                        <p>{{ total_events }}</p>
+                        <small>{{ active_events }} active</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card bg-danger text-white">
+                        <h3>Complaints</h3>
+                        <p>{{ total_complaints }}</p>
+                        <small>{{ open_complaints }} open</small>
+                    </div>
+                </div>
+    </div>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Recent Articles</h5>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Author</th>
+                                            <th>Status</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for article in recent_articles %}
+                                        <tr>
+                                            <td>{{ article.title }}</td>
+                                            <td>{{ article.author.username }}</td>
+                                            <td>
+                                                <span class="badge {% if article.status == 'published' %}bg-success{% else %}bg-warning{% endif %}">
+                                                    {{ article.status }}
+                                                </span>
+                                            </td>
+                                            <td>{{ article.created_at|date:"M d, Y" }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Recent Users</h5>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Email</th>
+                                            <th>Status</th>
+                                            <th>Joined</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for user in recent_users %}
+                                        <tr>
+                                            <td>{{ user.username }}</td>
+                                            <td>{{ user.email }}</td>
+                                            <td>
+                                                <span class="badge {% if user.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                                    {{ user.is_active|yesno:"Active,Inactive" }}
+                                                </span>
+                                            </td>
+                                            <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">User Growth</h5>
+                            <div class="chart-container">
+                                <canvas id="userGrowthChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Content Distribution</h5>
+                            <div class="chart-container">
+                                <canvas id="contentDistributionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- User Management Section -->
+        <section id="users" class="content-section">
+            <h2 class="mb-4">User Management</h2>
+            <div class="card">
+                <div class="card-body">
+                    <!-- Header with stats -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Total Users</h5>
+                                    <h2 class="mb-0">{{ total_users }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Active Users</h5>
+                                    <h2 class="mb-0">{{ active_users }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Inactive Users</h5>
+                                    <h2 class="mb-0">{{ total_users|subtract:active_users }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search and filters -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <form method="GET" class="row">
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-search"></i>
+                                        </span>
+                                        <input type="text" class="form-control" id="userSearch" name="search"
+                                               placeholder="Search by name, email..." 
+                                               value="{{ search_query }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <select class="form-select" id="statusFilter" name="status">
+                                        <option value="">All Statuses</option>
+                                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                                        <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-filter me-2"></i>Filter
+                                    </button>
+                                </div>
+        </form>
+    </div>
+                    </div>
+
+                    <!-- Users table -->
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Join Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in all_users %}
+                                    <tr>
+                                        <td>{{ user.id }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if user.profile.profile_pic %}
+                                                    <img src="{{ user.profile.profile_pic.url }}" 
+                                                         class="rounded-circle me-2" 
+                                                         width="32" height="32"
+                                                         alt="Profile Picture">
+                                                {% else %}
+                                                    <div class="rounded-circle me-2 bg-secondary text-white d-flex align-items-center justify-content-center" 
+                                                         style="width: 32px; height: 32px;">
+                                                        {{ user.username|make_list|first|upper }}
+                                                    </div>
+                                                {% endif %}
+                                                <div>
+                                                    <div class="fw-bold">
+                                                        {% if user.get_full_name %}
+                                                            {{ user.get_full_name }}
+                                                        {% else %}
+                                                            {{ user.username }}
+                                                        {% endif %}
+                                                    </div>
+                                                    <small class="text-muted">@{{ user.username }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ user.email }}</td>
+                                        <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                                        <td>
+                                            <span class="badge {% if user.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                                {{ user.is_active|yesno:"Active,Inactive" }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm btn-outline-primary view-user" 
+                                                        data-user-id="{{ user.id }}"
+                                                        title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-warning toggle-status" 
+                                                        data-user-id="{{ user.id }}"
+                                                        data-current-status="{{ user.is_active|yesno:'active,inactive' }}"
+                                                        title="Toggle Status">
+                                                    <i class="fas {% if user.is_active %}fa-ban{% else %}fa-check{% endif %}"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger delete-user" 
+                                                        data-user-id="{{ user.id }}"
+                                                        title="Delete User">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center">
+                                            <div class="alert alert-info mb-0">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                No users found. {% if search_query or status_filter %}Try adjusting your search filters.{% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Content Moderation Section -->
+        <section id="content" class="content-section">
+            <h2 class="mb-4">Content Moderation</h2>
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Author</th>
+                                    <th>Category</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for article in articles %}
+                                <tr>
+                                    <td>{{ article.title }}</td>
+                                    <td>{{ article.author.username }}</td>
+                                    <td>{{ article.category.name }}</td>
+                                    <td>
+                                        <span class="badge {% if article.status == 'published' %}bg-success{% else %}bg-warning{% endif %}">
+                                            {{ article.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary view-article" data-article-id="{{ article.id }}">View</button>
+                                        <button class="btn btn-sm btn-success approve-article" data-article-id="{{ article.id }}">Approve</button>
+                                        <button class="btn btn-sm btn-danger reject-article" data-article-id="{{ article.id }}">Reject</button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analytics Section -->
+        <section id="analytics" class="content-section">
+            <h2 class="mb-4">Analytics</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">User Activity</h5>
+                            <div class="chart-container">
+                                <canvas id="userActivityChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Content Engagement</h5>
+                            <div class="chart-container">
+                                <canvas id="contentEngagementChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Complaints Section -->
+        <section id="complaints" class="content-section">
+            <h2 class="mb-4">Complaints Management</h2>
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>User</th>
+                                    <th>Subject</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for complaint in complaints %}
+                                <tr>
+                                    <td>{{ complaint.id }}</td>
+                                    <td>{{ complaint.user.username }}</td>
+                                    <td>{{ complaint.subject }}</td>
+                                    <td>
+                                        <span class="badge {% if complaint.status == 'resolved' %}bg-success{% elif complaint.status == 'pending' %}bg-warning{% else %}bg-info{% endif %}">
+                                            {{ complaint.status }}
+                                        </span>
+                                    </td>
+                                    <td>{{ complaint.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary view-complaint" data-complaint-id="{{ complaint.id }}">View</button>
+                                        <button class="btn btn-sm btn-success resolve-complaint" data-complaint-id="{{ complaint.id }}">Resolve</button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+    </div>
+        </section>
+
+        <!-- Events Section -->
+        <section id="events" class="content-section">
+            <h2 class="mb-4">Events Management</h2>
+            <div class="card">
+                <div class="card-body">
+                    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addEventModal">
+                        <i class="fas fa-plus"></i> Add New Event
+                    </button>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+            <thead>
+                <tr>
+                                    <th>Title</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Created By</th>
+                                    <th>Featured</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                                {% for event in events %}
+                                    <tr>
+                                        <td>{{ event.title }}</td>
+                                        <td>{{ event.date|date:"M d, Y H:i" }}</td>
+                                        <td>
+                                            <span class="badge {% if event.status == 'upcoming' %}bg-primary
+                                                {% elif event.status == 'ongoing' %}bg-success
+                                                {% elif event.status == 'completed' %}bg-secondary
+                                                {% else %}bg-danger{% endif %}">
+                                                {{ event.status|title }}
+                                            </span>
+                                        </td>
+                                        <td>{{ event.created_by.username }}</td>
+                                        <td>
+                                            {% if event.is_featured %}
+                                                <span class="badge bg-warning">Featured</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm btn-outline-primary edit-event" 
+                                                        data-event-id="{{ event.id }}"
+                                                        title="Edit Event">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger delete-event" 
+                                                        data-event-id="{{ event.id }}"
+                                                        title="Delete Event">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center">
+                                            <div class="alert alert-info mb-0">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                No events found.
+                                            </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Add Event Modal -->
+<div class="modal fade" id="addEventModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Event</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="eventForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Event Title</label>
+                        <input type="text" class="form-control" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date</label>
+                        <input type="datetime-local" class="form-control" name="date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Image</label>
+                        <input type="file" class="form-control" name="image" accept="image/*">
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" name="is_featured" id="is_featured">
+                            <label class="form-check-label" for="is_featured">Feature this event</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveEvent">Save Event</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Navigation
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('.content-section');
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetSection = this.getAttribute('data-section');
+            
+            // Update active states
+            navLinks.forEach(l => l.classList.remove('active'));
+            sections.forEach(s => s.classList.remove('active'));
+            
+            this.classList.add('active');
+            document.getElementById(targetSection).classList.add('active');
+        });
+    });
+
+    // Chart configuration options
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    };
+
+    // Initialize charts with real data
+    const userGrowthCtx = document.getElementById('userGrowthChart').getContext('2d');
+    new Chart(userGrowthCtx, {
+        type: 'line',
+        data: {
+            labels: [{% for item in user_growth %}'{{ item.date|date:"M d" }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+            datasets: [{
+                label: 'New Users',
+                data: [{% for item in user_growth %}{{ item.count }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                borderColor: '#4f5bd5',
+                tension: 0.4,
+                fill: false
+            }]
+        },
+        options: chartOptions
+    });
+
+    const contentDistributionCtx = document.getElementById('contentDistributionChart').getContext('2d');
+    new Chart(contentDistributionCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Articles', 'Comments', 'Events'],
+            datasets: [{
+                data: [
+                    {{ content_distribution.articles }},
+                    {{ content_distribution.comments }},
+                    {{ content_distribution.events }}
+                ],
+                backgroundColor: ['#4f5bd5', '#ff6b6b', '#51cf66']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+});
+
+// Event Management
+document.getElementById('saveEvent').addEventListener('click', function() {
+    const form = document.getElementById('eventForm');
+            const formData = new FormData(form);
+    
+    fetch('/custom-admin/events/', {
+                method: 'POST',
+        body: formData,
+                headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close modal and show success message
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addEventModal'));
+            modal.hide();
+            showNotification('Event created successfully', 'success');
+            // Reload page to show new event
+            setTimeout(() => location.reload(), 1000);
+                    } else {
+            showNotification(data.error || 'Error creating event', 'error');
+                    }
+                })
+                .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error creating event', 'error');
+    });
+});
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} position-fixed top-0 end-0 m-3`;
+    notification.style.zIndex = '9999';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
+        }
+    </script>
+{% endblock %}

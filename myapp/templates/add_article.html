@@ -1,0 +1,239 @@
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Article - Madison Online Magazine</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+    <style>
+        /* Basic styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed; /* Fixed background */
+            background-color: #e0187c;
+        }
+
+        /* Overlay to make text readable */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8); /* Semi-transparent white overlay */
+            z-index: -1; /* Behind the content */
+        }
+
+        .container {
+            padding: 20px;
+            margin-top: 60px; /* Offset for fixed top bar */
+            position: relative;
+            z-index: 1; /* Above the overlay */
+        }
+
+        /* Top Navigation Bar */
+        .top-nav {
+            width: 100%;
+            background-color: #333;
+            color: white;
+            overflow: hidden;
+            padding: 10px 0;
+            position: fixed;
+            top: 0;
+            display: flex;
+            justify-content: flex-end;
+            z-index: 1001;
+        }
+        .top-nav a {
+            padding: 10px 15px;
+            color: #ddd;
+            text-decoration: none;
+            font-size: 18px;
+        }
+        .top-nav a:hover {
+            color: #fff;
+        }
+        
+        /* Sidebar styling */
+        .sidebar {
+            height: 100%;
+            width: 250px;
+            position: fixed;
+            top: 0;
+            left: -250px;
+            background-color: #333;
+            color: white;
+            transition: 0.3s;
+            padding-top: 60px;
+            z-index: 1000;
+        }
+        .sidebar a {
+            padding: 10px 20px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #ddd;
+            display: block;
+            transition: 0.2s;
+        }
+        .sidebar a:hover {
+            background-color: #575757;
+            color: white;
+        }
+        
+        /* Hamburger menu styling */
+        .hamburger {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: white; /* Make the hamburger menu icon white */
+            z-index: 1001;
+        }
+
+        /* Content overlay effect without shifting */
+        .overlay-active #mySidebar {
+            left: 0;
+        }
+
+        /* Form styling */
+        .form-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .form-container h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #444;
+        }
+        .form-container label {
+            font-weight: bold;
+            margin-top: 15px;
+            display: block;
+        }
+        .form-container input[type="text"],
+        .form-container select,
+        .form-container textarea,
+        .form-container input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            transition: border 0.3s;
+        }
+        .form-container input[type="text"]:focus,
+        .form-container select:focus,
+        .form-container textarea:focus,
+        .form-container input[type="file"]:focus {
+            border: 1px solid #007BFF;
+            outline: none;
+        }
+        .form-container button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        .form-container button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Background overlay -->
+<div class="overlay"></div>
+
+<!-- Top Navigation Bar -->
+<div class="top-nav">
+    {% if user.is_authenticated %}
+        <a href="{% url 'home' %}"><i class="fas fa-home"></i> Home</a>
+        <a href="{% url 'profile' %}"><i class="fas fa-user"></i> Profile</a>
+        <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    {% else %}
+        <a href="{% url 'home' %}"><i class="fas fa-home"></i> Home</a>
+        <a href="{% url 'register' %}"><i class="fas fa-user-plus"></i> Register</a>
+        <a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Login</a>
+    {% endif %}
+</div>
+
+<!-- Sidebar and Hamburger Menu -->
+<div class="hamburger" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i> <!-- Hamburger menu icon is white now -->
+</div>
+
+<div id="mySidebar" class="sidebar">
+    <a href="javascript:void(0)" onclick="toggleSidebar()">Close &times;</a>
+    <a href="{% url 'add_article' %}"><i class="fas fa-plus"></i> Add Article</a>
+    <a href="{% url 'view_articles' %}"><i class="fas fa-eye"></i> View Articles</a>
+</div>
+
+<!-- Main content with overlay effect when sidebar is open -->
+<div id="mainContent" class="main-content">
+    <div class="container">
+        <div class="form-container">
+            <h1>Add a New Article</h1>
+
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form id="article-form" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <label for="title">Title:</label>
+                <input type="text" id="title" name="title" required placeholder="Enter article title">
+
+                <label for="category">Category:</label>
+                <select id="category" name="category" required>
+                    <option value="">Select a category</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="author">Published by:</label>
+                <input type="text" id="author" name="author" required placeholder="Enter author's name">
+
+                <label for="image">Image:</label>
+                <input type="file" id="image" name="image" accept="image/*" required>
+
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" rows="4" required placeholder="Write article description here..."></textarea>
+
+                <button type="submit">Submit Article</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleSidebar() {
+        document.body.classList.toggle("overlay-active");
+    }
+</script>
+
+</body>
+</html>
+{% endblock %}

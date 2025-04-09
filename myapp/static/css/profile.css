@@ -1,0 +1,173 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(to right, #f4f4f9, #e0e0e0);
+    margin: 0;
+    padding: 0;
+}
+
+.navbar {
+    background-color: #333;
+    color: white;
+    padding: 15px 0;
+}
+
+.navbar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: auto;
+    padding: 0 20px;
+}
+
+.navbar ul {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+}
+
+.navbar a {
+    color: white;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.navbar a:hover {
+    color: #ff4d94; /* Luxurious hover effect */
+}
+
+.profile-container {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.profile-picture {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.image-preview {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #ddd;
+    margin: 0 auto;
+    position: relative;
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.image-preview:hover img {
+    transform: scale(1.05);
+}
+
+.file-label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: #333;
+}
+
+.save-button {
+    background-color: #ff4d94;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.save-button:hover {
+    background-color: #ff1a66;
+}
+
+.user-details {
+    margin-top: 20px;
+}
+
+.user-details label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.user-details input,
+.user-details textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+.back-button {
+    display: inline-block;
+    margin-top: 10px;
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+}
+
+.interests label {
+    display: block;
+    margin: 5px 0;
+}
+
+.reading-history {
+    margin-top: 30px;
+}
+
+.history-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.history-card {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: calc(33.333% - 20px);
+    transition: transform 0.3s;
+}
+
+.history-card:hover {
+    transform: scale(1.02);
+}
+
+.history-card img {
+    width: 100%;
+    height: auto;
+    border-radius: 5px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 20px;
+}
+
+.empty-state-image {
+    width: 150px; /* Adjust size as needed */
+    margin-bottom: 10px;
+}
+
+.footer {
+    text-align: center;
+    padding: 20px 0;
+    background-color: #333;
+    color: white;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+} 

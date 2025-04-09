@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="search-container">
+    <input type="text" id="searchInput" class="search-box" placeholder="Search articles...">
+    <i class="fas fa-search search-icon"></i>
+    <select id="categoryFilter" class="filter-dropdown">
+        <option value="">All Categories</option>
+        {% for category in categories %}
+            <option value="{{ category.id }}">{{ category.name }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+<div id="articles" class="articles-container">
+    {% for article in articles %}
+        <div class="article">
+            <h3>{{ article.title }}</h3>
+            <p>{{ article.description }}</p>
+            <a href="{% url 'article_detail' article.id %}">Read more</a>
+        </div>
+    {% empty %}
+        <p>No articles found.</p>
+    {% endfor %}
+</div>
+{% endblock %}

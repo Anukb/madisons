@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="text-center mb-5">Choose Your Plan</h1>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Current Plan Section (if user has an active plan) -->
+    {% if user_plan %}
+        <div class="current-plan-section mb-5">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <h3 class="card-title">Your Current Plan</h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Plan:</strong> {{ user_plan.plan.name }}</p>
+                            <p><strong>Status:</strong> 
+                                <span class="badge {% if user_plan.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ user_plan.is_active|yesno:"Active,Inactive" }}
+                                </span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Start Date:</strong> {{ user_plan.start_date|date:"F j, Y" }}</p>
+                            <p><strong>End Date:</strong> {{ user_plan.end_date|date:"F j, Y" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Available Plans Section -->
+    <div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
+        <!-- Free Plan -->
+        <div class="col">
+            <div class="card mb-4 rounded-3 shadow-sm">
+                <div class="card-header py-3">
+                    <h4 class="my-0 fw-normal">Free</h4>
+                </div>
+                <div class="card-body">
+                    <h1 class="card-title pricing-card-title">$0<small class="text-muted fw-light">/mo</small></h1>
+                    <ul class="list-unstyled mt-3 mb-4">
+                        <li><i class="fas fa-check text-success"></i> Basic article access</li>
+                        <li><i class="fas fa-check text-success"></i> Comment on articles</li>
+                        <li><i class="fas fa-check text-success"></i> Basic profile</li>
+                        <li><i class="fas fa-times text-danger"></i> No ads</li>
+                    </ul>
+                    <button type="button" class="w-100 btn btn-lg btn-outline-primary">Current Plan</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Premium Plan -->
+        <div class="col">
+            <div class="card mb-4 rounded-3 shadow-sm border-primary">
+                <div class="card-header py-3 text-white bg-primary border-primary">
+                    <h4 class="my-0 fw-normal">Premium</h4>
+                </div>
+                <div class="card-body">
+                    <h1 class="card-title pricing-card-title">$15<small class="text-muted fw-light">/mo</small></h1>
+                    <ul class="list-unstyled mt-3 mb-4">
+                        <li><i class="fas fa-check text-success"></i> All Free features</li>
+                        <li><i class="fas fa-check text-success"></i> Ad-free experience</li>
+                        <li><i class="fas fa-check text-success"></i> Exclusive content</li>
+                        <li><i class="fas fa-check text-success"></i> Priority support</li>
+                    </ul>
+                    <button type="button" class="w-100 btn btn-lg btn-primary">Get Started</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pro Plan -->
+        <div class="col">
+            <div class="card mb-4 rounded-3 shadow-sm border-primary">
+                <div class="card-header py-3 text-white bg-primary border-primary">
+                    <h4 class="my-0 fw-normal">Pro</h4>
+                </div>
+                <div class="card-body">
+                    <h1 class="card-title pricing-card-title">$29<small class="text-muted fw-light">/mo</small></h1>
+                    <ul class="list-unstyled mt-3 mb-4">
+                        <li><i class="fas fa-check text-success"></i> All Premium features</li>
+                        <li><i class="fas fa-check text-success"></i> Early access to articles</li>
+                        <li><i class="fas fa-check text-success"></i> Custom profile badge</li>
+                        <li><i class="fas fa-check text-success"></i> Offline reading</li>
+                    </ul>
+                    <button type="button" class="w-100 btn btn-lg btn-primary">Get Started</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Comparison -->
+    <div class="table-responsive mt-5">
+        <h2 class="text-center mb-4">Features Comparison</h2>
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th style="width: 34%">Feature</th>
+                    <th style="width: 22%">Free</th>
+                    <th style="width: 22%">Premium</th>
+                    <th style="width: 22%">Pro</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Read Articles</td>
+                    <td><i class="fas fa-check text-success"></i></td>
+                    <td><i class="fas fa-check text-success"></i></td>
+                    <td><i class="fas fa-check text-success"></i></td>
+                </tr>
+                <tr>
+                    <td>Comment on Articles</td>
+                    <td><i class="fas fa-check text-success"></i></td>
+                    <td><i class="fas fa-check text-success"></i></td>
+                    <td><i class="fas fa-check text-success"></i></td>
+                </tr>
+                <tr>
+                    <td>Ad-free Experience</td>
+                    <td><i class="fas fa-times text-danger"></i></td>
+                    <td><i class="fas fa-check text-success"></i></td>
+                    <td><i class="fas fa-check text-success"></i></td>
+                </tr>
+                <tr>
+                    <td>Exclusive Content</td>
+                    <td><i class="fas fa-times text-danger"></i></td>
+                    <td><i class="fas fa-check text-success"></i></td>
+                    <td><i class="fas fa-check text-success"></i></td>
+                </tr>
+                <tr>
+                    <td>Early Access to Articles</td>
+                    <td><i class="fas fa-times text-danger"></i></td>
+                    <td><i class="fas fa-times text-danger"></i></td>
+                    <td><i class="fas fa-check text-success"></i></td>
+                </tr>
+                <tr>
+                    <td>Custom Profile Badge</td>
+                    <td><i class="fas fa-times text-danger"></i></td>
+                    <td><i class="fas fa-times text-danger"></i></td>
+                    <td><i class="fas fa-check text-success"></i></td>
+                </tr>
+                <tr>
+                    <td>Offline Reading</td>
+                    <td><i class="fas fa-times text-danger"></i></td>
+                    <td><i class="fas fa-times text-danger"></i></td>
+                    <td><i class="fas fa-check text-success"></i></td>
+                </tr>
+                <tr>
+                    <td>Priority Support</td>
+                    <td><i class="fas fa-times text-danger"></i></td>
+                    <td><i class="fas fa-check text-success"></i></td>
+                    <td><i class="fas fa-check text-success"></i></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Payment History Section -->
+    {% if payments %}
+        <div class="mt-5">
+            <h2 class="text-center mb-4">Payment History</h2>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Plan</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                            <tr>
+                                <td>{{ payment.created_at|date:"F j, Y" }}</td>
+                                <td>{{ payment.plan.name }}</td>
+                                <td>${{ payment.amount }}</td>
+                                <td>
+                                    <span class="badge {% if payment.status == 'completed' %}bg-success{% else %}bg-warning{% endif %}">
+                                        {{ payment.status|title }}
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Add custom CSS -->
+<style>
+    .card {
+        transition: transform 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .pricing-card-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    
+    .list-unstyled li {
+        margin-bottom: 0.5rem;
+    }
+    
+    .current-plan-section .card {
+        background-color: #f8f9fa;
+    }
+    
+    .table th {
+        background-color: #f8f9fa;
+    }
+    
+    .fas {
+        margin-right: 0.5rem;
+    }
+</style>
+
+<!-- Add custom JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle subscription button clicks
+    const subscribeButtons = document.querySelectorAll('.btn-primary');
+    subscribeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const planName = this.closest('.card').querySelector('h4').textContent;
+            if (confirm(`Are you sure you want to subscribe to the ${planName} plan?`)) {
+                // Add subscription logic here
+                console.log(`Subscribing to ${planName} plan`);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

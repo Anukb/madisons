@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="notifications-container">
+    <div class="notifications-header">
+        <h1>Notifications</h1>
+        {% if unread_count > 0 %}
+            <button id="mark-all-read" class="mark-read-btn">Mark All as Read</button>
+        {% endif %}
+    </div>
+
+    <div class="notifications-list">
+        {% for notification in notifications %}
+            <div class="notification-item {% if not notification.is_read %}unread{% endif %}">
+                <h3>{{ notification.title }}</h3>
+                <p>{{ notification.message }}</p>
+                <span class="notification-time">{{ notification.created_at|timesince }} ago</span>
+            </div>
+        {% empty %}
+            <p>No notifications to display.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

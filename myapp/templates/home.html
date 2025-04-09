@@ -1,0 +1,572 @@
+{% block content %}
+{% load static %}
+{% load notification_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Madison Online Magazine</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Base CSS -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+    <!-- jQuery (needed for some interactions) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Notifications JS (load after jQuery) -->
+    {% if user.is_authenticated %}
+        <script src="{% static 'js/notifications.js' %}" defer></script>
+    {% endif %}
+    <style>
+        /* Basic styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        .container {
+            padding: 20px;
+        }
+
+        /* Top Navigation Bar */
+        .top-nav {
+            width: 100%;
+            background-color: #333;
+            color: white;
+            overflow: hidden;
+            padding: 10px 0;
+            position: fixed;
+            top: 0;
+            display: flex;
+            justify-content: flex-end;
+            z-index: 1001;
+        }
+        .top-nav a {
+            padding: 10px 15px;
+            color: #ddd;
+            text-decoration: none;
+            font-size: 18px;
+        }
+        .top-nav a:hover {
+            color: #fff;
+        }
+        
+        /* Sidebar styling */
+        .sidebar {
+            height: 100%;
+            width: 250px;
+            position: fixed;
+            top: 0;
+            left: -250px;
+            background-color: #333;
+            color: white;
+            transition: 0.3s;
+            padding-top: 60px;
+            z-index: 1000;
+        }
+        .sidebar a {
+            padding: 10px 20px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #ddd;
+            display: block;
+            transition: 0.2s;
+        }
+        .sidebar a:hover {
+            background-color: #575757;
+            color: white;
+        }
+        
+        /* Hamburger menu styling */
+        .hamburger {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: white; /* Make the hamburger menu icon white */
+            z-index: 1001;
+        }
+
+        /* Content overlay effect without shifting */
+        .overlay-active #mySidebar {
+            left: 0;
+        }
+
+        /* Cover image and overlay */
+        .image-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+        }
+        .cover-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .overlay h1 {
+            color: white;
+            font-size: 48px; /* Larger font size for "Welcome to Madison" */
+            margin: 0;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Offset main content to account for fixed top bar */
+        .main-content {
+            margin-top: 60px;
+        }
+
+        .article-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .article-card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: calc(33.333% - 20px);
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+        }
+
+        .article-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .article-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .article-info {
+            padding: 15px;
+        }
+
+        .article-info h3 {
+            margin: 0 0 10px;
+            font-size: 1.5em;
+            color: #333;
+        }
+
+        .article-info p {
+            margin: 0 0 15px;
+            color: #666;
+        }
+
+        .read-more {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: #ff4d94;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .read-more:hover {
+            background-color: #ff1a66;
+        }
+
+        /* New styles for search and navigation */
+        .main-nav {
+            background-color: #222;
+            padding: 15px 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1001;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .search-wrapper {
+            position: relative;
+            margin-right: 20px;
+        }
+
+        .search-input {
+            padding: 8px 35px 8px 15px;
+            border-radius: 20px;
+            border: 1px solid #444;
+            background: #333;
+            color: white;
+            width: 200px;
+            transition: width 0.3s ease;
+        }
+
+        .search-input:focus {
+            width: 300px;
+            background: #444;
+            outline: none;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+            cursor: pointer;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .nav-link:hover {
+            background-color: #444;
+        }
+
+        .nav-link i {
+            font-size: 16px;
+        }
+
+        /* Update main content margin to account for fixed nav */
+        .main-content {
+            margin-top: 80px;
+        }
+
+        /* Notification styles */
+        .notification-wrapper {
+            position: relative;
+            margin-right: 20px;
+        }
+
+        .notification-icon {
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            transition: color 0.3s;
+        }
+
+        .notification-icon:hover {
+            color: #ff4d94;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff4d94;
+            color: white;
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 50%;
+            display: none;
+        }
+
+        .notification-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 300px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .notification-header h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        #markAllRead {
+            background: none;
+            border: none;
+            color: #ff4d94;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        #notificationList {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .notification-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.3s;
+        }
+
+        .notification-item.unread {
+            background-color: #f8f9fa;
+        }
+
+        .notification-item:hover {
+            background-color: #f1f1f1;
+        }
+
+        .notification-content {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .notification-time {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            display: block;
+        }
+
+        /* Animation for notification dropdown */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notification-dropdown.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+<!-- Main Navigation -->
+<nav class="main-nav">
+    <div class="nav-container">
+        <div class="nav-left">
+            <a href="{% url 'home' %}" class="nav-link">
+                <i class="fas fa-book-open"></i>
+                Madison Magazine
+            </a>
+        </div>
+        <div class="nav-right">
+            {% if user.is_authenticated %}
+                <!-- Notification Component -->
+                <div class="notification-container">
+                    <div class="notification-icon" id="notificationIcon">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" id="notificationBadge"></span>
+                    </div>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <h3>Notifications</h3>
+                            <button class="mark-all-read">Mark all as read</button>
+                        </div>
+                        <div class="notification-list" id="notificationList">
+                            <!-- Notifications will be populated here -->
+                        </div>
+                    </div>
+                </div>
+                <!-- Navigation Links -->
+                <a href="{% url 'home' %}" class="nav-link">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="{% url 'profile' %}" class="nav-link">
+                    <i class="fas fa-user"></i> Profile
+                </a>
+                <a href="{% url 'recommendations' %}" class="nav-link">
+                    <i class="fas fa-star"></i> For You
+                </a>
+                <a href="{% url 'logout' %}" class="nav-link">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            {% else %}
+                <a href="{% url 'register' %}" class="nav-link">
+                    <i class="fas fa-user-plus"></i> Register
+                </a>
+                <a href="{% url 'login' %}" class="nav-link">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<!-- Sidebar and Hamburger Menu -->
+<div class="hamburger" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+</div>
+
+<div id="mySidebar" class="sidebar">
+    <a href="javascript:void(0)" onclick="toggleSidebar()">Close &times;</a>
+    <a href="{% url 'add_article' %}"><i class="fas fa-plus"></i> Add Article</a>
+    <a href="{% url 'user_drafts' %}"><i class="fas fa-eye"></i> Drafts</a>
+    <a href="{% url 'view_articles' %}"><i class="fas fa-eye"></i> View Articles</a>
+    <a href="{% url 'subscription' %}"><i class="fas fa-eye"></i> Subscription</a>
+</div>
+
+<!-- Main content with overlay effect when sidebar is open -->
+<div id="mainContent" class="main-content">
+    <main>
+        <div class="image-container">
+            <img src="{% static 'images/img1.jpg' %}" alt="Cover Image" class="cover-image">
+            <div class="overlay">
+                <h1>Welcome to Madison</h1> <!-- Larger and white welcome text -->
+            </div>
+        </div>
+
+        <div class="container">
+            <h2>All Articles</h2>
+            <div class="article-list">
+                {% for article in articles %}
+                    <div class="article-card">
+                        <img src="{{ article.image.url }}" alt="{{ article.title }}" class="article-image">
+                        <div class="article-info">
+                            <h3>{{ article.title }}</h3>
+                            <p>{{ article.description|truncatewords:20 }}</p>
+                            <a href="{% url 'article_detail' article.id %}" class="read-more">Read more</a>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p>No articles available at this time.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Madison Online Magazine. All rights reserved.</p>
+    </footer>
+</div>
+
+<!-- Add search.js before closing body tag -->
+<script src="{% static 'js/search.js' %}"></script>
+<script>
+    function toggleSidebar() {
+        document.body.classList.toggle("overlay-active");
+    }
+</script>
+
+<!-- Add CSRF token for AJAX requests -->
+<script>
+    const csrfToken = "{{ csrf_token }}";
+</script>
+
+{% if user.is_authenticated %}
+    <script src="{% static 'js/notifications.js' %}"></script>
+{% endif %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const notificationIcon = document.getElementById('notificationIcon');
+        const notificationDropdown = document.getElementById('notificationDropdown');
+        const notificationBadge = document.getElementById('notificationBadge');
+
+        // Function to fetch notifications
+        function fetchNotifications() {
+            fetch('/api/notifications/')
+                .then(response => response.json())
+                .then(data => {
+                    const notificationList = document.createElement('ul');
+                    notificationList.id = 'notificationList';
+                    
+                    // Update notification badge
+                    notificationBadge.textContent = data.unread_count;
+                    notificationBadge.style.display = data.unread_count > 0 ? 'block' : 'none';
+                    
+                    // Clear existing notifications
+                    const existingList = document.getElementById('notificationList');
+                    if (existingList) {
+                        existingList.remove();
+                    }
+                    
+                    if (data.notifications.length === 0) {
+                        const emptyItem = document.createElement('li');
+                        emptyItem.className = 'notification-item';
+                        emptyItem.innerHTML = '<div class="notification-content">No notifications</div>';
+                        notificationList.appendChild(emptyItem);
+                    } else {
+                        data.notifications.forEach(notification => {
+                            const item = document.createElement('li');
+                            item.className = `notification-item ${notification.is_read ? '' : 'unread'}`;
+                            item.innerHTML = `
+                                <div class="notification-content">
+                                    <h4>${notification.title}</h4>
+                                    <p>${notification.message}</p>
+                                    <span class="notification-time">${new Date(notification.created_at).toLocaleString()}</span>
+                                </div>
+                            `;
+                            notificationList.appendChild(item);
+                        });
+                    }
+                    
+                    notificationDropdown.appendChild(notificationList);
+                })
+                .catch(error => console.error('Error fetching notifications:', error));
+        }
+
+        // Toggle dropdown when clicking the bell icon
+        notificationIcon.addEventListener('click', function(e) {
+            e.stopPropagation();
+            notificationDropdown.classList.toggle('show');
+            fetchNotifications(); // Fetch notifications when opening dropdown
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.notification-wrapper')) {
+                notificationDropdown.classList.remove('show');
+            }
+        });
+
+        // Initial fetch of notifications
+        fetchNotifications();
+
+        // Fetch notifications every 30 seconds
+        setInterval(fetchNotifications, 30000);
+    });
+</script>
+
+</body>
+</html>
+{% endblock %}

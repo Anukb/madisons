@@ -1,0 +1,469 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ article.title }} - Madison Online Magazine</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Basic styling */
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #ffeef8; /* Light pink background */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh; /* Full viewport height */
+        }
+
+        /* Fixed Top Navigation Bar */
+        .top-nav {
+            width: 100%;
+            background-color: #333;
+            color: white;
+            overflow: hidden;
+            padding: 10px 0;
+            position: fixed;
+            top: 0;
+            display: flex;
+            justify-content: flex-end;
+            z-index: 1001;
+        }
+        .top-nav a {
+            padding: 10px 15px;
+            color: #ddd;
+            text-decoration: none;
+            font-size: 18px;
+            transition: color 0.3s, text-shadow 0.3s;
+        }
+        .top-nav a:hover {
+            color: #fff;
+            text-shadow: 0 0 10px #ff4d94; /* Subtle glow effect */
+        }
+
+        /* Sidebar styling */
+        .sidebar {
+            height: 100%;
+            width: 250px;
+            position: fixed;
+            top: 0;
+            left: -250px;
+            background-color: #333;
+            color: white;
+            transition: 0.3s;
+            padding-top: 60px;
+            z-index: 1000;
+        }
+        .sidebar a {
+            padding: 10px 20px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #ddd;
+            display: block;
+            transition: 0.2s;
+        }
+        .sidebar a:hover {
+            background-color: #575757;
+            color: white;
+        }
+
+        /* Hamburger menu styling */
+        .hamburger {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: white;
+            z-index: 1001;
+        }
+
+        /* Content overlay effect without shifting */
+        .overlay-active #mySidebar {
+            left: 0;
+        }
+
+        /* Main content with offset for fixed header */
+        .main-content {
+            margin-top: 60px; /* Offset for fixed top bar */
+            padding: 20px;
+            flex: 1; /* Grow to fill remaining space */
+        }
+
+        /* Article detail styling */
+        .article-detail {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .article-detail-image {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .article-detail-content {
+            padding: 20px;
+            text-align: justify; /* Justified text alignment */
+        }
+
+        .article-detail-content h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #333;
+            text-decoration: underline; /* Elegant underline */
+        }
+
+        .article-detail-content p {
+            font-size: 1.2em;
+            line-height: 1.6;
+            color: #666;
+        }
+
+        /* Comments and Ratings Section */
+        .comments-section, .rating-section {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .review-card {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .review-card img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        /* Star Rating System */
+        .star-rating {
+            display: flex;
+            direction: rtl; /* For star rating */
+        }
+        .star {
+            font-size: 30px;
+            color: #ddd;
+            cursor: pointer;
+        }
+        .star:hover,
+        .star:hover ~ .star {
+            color: #ff4d94; /* Luxurious color for stars */
+        }
+
+        /* Fixed Footer styling */
+        footer {
+            text-align: center;
+            padding: 20px 0;
+            background-color: #d10047; /* Darker pink background for footer */
+            color: white; /* White text */
+            margin-top: auto; /* Push footer to the bottom */
+        }
+
+        /* Summary icon styling */
+        .summary-icon {
+            font-size: 18px;
+            cursor: pointer;
+            color: #ff6b81;
+            margin-left: 10px;
+            transition: transform 0.2s, color 0.2s;
+        }
+
+        .summary-icon:hover {
+            transform: scale(1.1); /* Zoom effect */
+            color: #ff1a66; /* Change color on hover */
+        }
+
+        /* Popup styling */
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ffe4e1; /* Light pink background */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 300px;
+            text-align: center;
+            font-family: 'Arial', sans-serif;
+            z-index: 1000; /* Ensure it appears above other content */
+        }
+
+        .popup-content {
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .heart-box {
+            background: white;
+            padding: 10px;
+            border-radius: 50px;
+            display: inline-block;
+            font-size: 18px;
+            color: #ff6b81;
+            margin-bottom: 15px;
+        }
+
+        .loading {
+            text-align: center;
+            font-size: 16px;
+            color: #666;
+        }
+
+        .loading .dots {
+            animation: dots 1.5s infinite;
+            display: inline-block;
+            width: 24px;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: "."; }
+            40% { content: ".."; }
+            60% { content: "..."; }
+            80%, 100% { content: ""; }
+        }
+
+        .error-message {
+            color: #d32f2f;
+            text-align: center;
+            padding: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Background overlay -->
+<div class="overlay"></div>
+
+<!-- Top Navigation Bar -->
+<div class="top-nav">
+    {% if user.is_authenticated %}
+        <a href="{% url 'home' %}"><i class="fas fa-home"></i> Home</a>
+        <a href="{% url 'profile' %}"><i class="fas fa-user"></i> Profile</a>
+        <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    {% else %}
+        <a href="{% url 'home' %}"><i class="fas fa-home"></i> Home</a>
+        <a href="{% url 'register' %}"><i class="fas fa-user-plus"></i> Register</a>
+        <a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Login</a>
+    {% endif %}
+</div>
+
+<!-- Sidebar and Hamburger Menu -->
+<div class="hamburger" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i> <!-- Hamburger menu icon -->
+</div>
+
+<div id="mySidebar" class="sidebar">
+    <a href="javascript:void(0)" onclick="toggleSidebar()">Close &times;</a>
+    <a href="{% url 'add_article' %}"><i class="fas fa-plus"></i> Add Article</a>
+    <a href="{% url 'view_articles' %}"><i class="fas fa-eye"></i> View Articles</a>
+</div>
+
+<!-- Main content with overlay effect when sidebar is open -->
+<div id="mainContent" class="main-content">
+    <div class="article-detail">
+        <img src="{{ article.image.url }}" alt="{{ article.title }}" class="article-detail-image">
+        <div class="article-detail-content">
+            <h1>
+                {{ article.title }} 
+                <span class="summary-icon" data-article-id="{{ article.id }}" onclick="showSummary(this)">🗨️</span>
+            </h1>
+            <p class="article-content">{{ article.description }}</p>
+        </div>
+    </div>
+    <div class="comments-section">
+        <h3>Comments</h3>
+        {% for comment in article.comments.all %}
+            <div class="comment-card">
+                <img src="{{ comment.user.profile.profile_pic.url }}" alt="{{ comment.user.username }}" class="user-avatar">
+                <p><strong>{{ comment.user.username }}</strong> - {{ comment.created_at }}</p>
+                <p>{{ comment.body }}</p>
+                {% if comment.user == request.user %}
+                    <a href="{% url 'edit_comment' comment.id %}">Edit</a>
+                    <a href="{% url 'delete_comment' comment.id %}">Delete</a>
+                {% endif %}
+            </div>
+        {% empty %}
+            <p>No comments yet. Be the first to comment!</p>
+        {% endfor %}
+        <form method="post" action="{% url 'post_comment' article.id %}">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Submit Comment</button>
+        </form>
+    </div>
+    <div class="rating-section">
+        <h3>Rate this Article</h3>
+        <form id="rating-form" method="POST" action="{% url 'submit_rating' article.id %}">
+            {% csrf_token %}
+            <div class="star-rating">
+                <input type="radio" id="star1" name="score" value="5" class="star" required />
+                <label for="star1" class="star">★</label>
+                <input type="radio" id="star2" name="score" value="4" class="star" />
+                <label for="star2" class="star">★</label>
+                <input type="radio" id="star3" name="score" value="3" class="star" />
+                <label for="star3" class="star">★</label>
+                <input type="radio" id="star4" name="score" value="2" class="star" />
+                <label for="star4" class="star">★</label>
+                <input type="radio" id="star5" name="score" value="1" class="star" />
+                <label for="star5" class="star">★</label>
+            </div>
+            <label for="review">Review:</label>
+            <textarea id="review" name="review" placeholder="Write your review here..." required></textarea>
+            <button type="submit">Submit Rating</button>
+        </form>
+        <div id="reviews-container">
+            {% for rating in article.ratings.all %}
+                <div class="review-card">
+                    <strong>{{ rating.user.username }}</strong> rated this article <strong>{{ rating.score }}</strong>
+                    <p>{{ rating.review }}</p>
+                </div>
+            {% empty %}
+                <p>No reviews yet. Be the first to review!</p>
+            {% endfor %}
+        </div>
+        <div class="average-rating">
+            <h4>Average Rating: <span id="average-rating">{{ article.average_rating|floatformat:1 }}</span></h4>
+        </div>
+    </div>
+</div>
+
+<!-- Fixed Footer -->
+<footer>
+    <p>&copy; {{ year }} Madison Online Magazine</p>
+</footer>
+
+<script src="{% static 'js/comments.js' %}"></script>
+<script src="{% static 'js/rating.js' %}"></script>
+
+<script>
+    function toggleSidebar() {
+        document.body.classList.toggle("overlay-active");
+    }
+
+    $(document).ready(function() {
+        // Send AJAX request to log reading history
+        $.ajax({
+            url: "{% url 'track_reading' %}",  // This should match the URL pattern defined above
+            type: "POST",
+            data: {
+                articleId: "{{ article.id }}",
+                timeSpent: 0,  // You can calculate time spent if needed
+                scrollDepth: 0  // You can calculate scroll depth if needed
+            },
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'  // Include CSRF token for security
+            },
+            success: function(response) {
+                console.log("Reading history logged successfully.");
+            },
+            error: function(xhr, status, error) {
+                console.error("Error logging reading history:", error);
+            }
+        });
+    });
+</script>
+
+<!-- Popup Modal -->
+<div id="summaryPopup" class="popup">
+    <div class="popup-content">
+        <span class="close" onclick="closePopup()">&times;</span>
+        <div class="heart-box">
+            <h3>Madison ❤️</h3>
+        </div>
+        <div id="summaryText"></div>
+        <div class="loading" style="display: none;">
+            Generating summary<span class="dots">...</span>
+        </div>
+    </div>
+</div>
+
+<script>
+function showSummary(element) {
+    const popup = document.getElementById("summaryPopup");
+    const summaryText = document.getElementById("summaryText");
+    const loading = document.querySelector(".loading");
+    
+    // Show popup with loading state
+    popup.style.display = "block";
+    summaryText.style.display = "none";
+    loading.style.display = "block";
+    
+    // Get the article text
+    const articleText = document.querySelector('.article-content').innerText;
+    
+    // Request summary from server
+    fetch('/generate-summary', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ text: articleText })
+    })
+    .then(response => response.json())
+    .then(data => {
+        loading.style.display = "none";
+        summaryText.style.display = "block";
+        if (data.error) {
+            summaryText.innerHTML = `<p class="error-message">${data.error}</p>`;
+        } else {
+            summaryText.innerHTML = `<p class="summary-content">${data.summary}</p>`;
+        }
+    })
+    .catch(error => {
+        loading.style.display = "none";
+        summaryText.style.display = "block";
+        summaryText.innerHTML = '<p class="error-message">Failed to generate summary. Please try again.</p>';
+    });
+}
+
+function closePopup() {
+    const popup = document.getElementById("summaryPopup");
+    popup.style.display = "none";
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+</body>
+</html>

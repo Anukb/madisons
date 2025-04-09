@@ -1,0 +1,139 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Madison</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #e9ecef;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background-color: #ffffff;
+            padding: 2.5em;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            width: 350px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 2em;
+            margin-bottom: 0.5em;
+            color: #333;
+        }
+        h2 {
+            font-size: 1.2em;
+            margin-bottom: 1em;
+            color: #666;
+        }
+        .form-group {
+            margin-bottom: 1.5em;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.3em;
+            font-weight: 600;
+            color: #555;
+        }
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 0.7em;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 0.8em;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            width: 100%;
+            margin-top: 1em;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .error-messages {
+            list-style: none;
+            padding: 0;
+            color: #d9534f;
+            margin-bottom: 1em;
+            font-size: 0.9em;
+        }
+        .register-link,
+        .admin-link {
+            display: block;
+            color: #007bff;
+            margin-top: 1em;
+            font-size: 0.9em;
+            transition: color 0.3s;
+        }
+        .register-link:hover,
+        .admin-link:hover {
+            color: #0056b3;
+            text-decoration: underline;
+        }
+        .forgot-password {
+            margin-top: 0.8em;
+        }
+        .forgot-password a {
+            color: #007bff;
+            font-size: 0.9em;
+        }
+        .forgot-password a:hover {
+            text-decoration: underline;
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>Madison</h1>
+        <h2>Login</h2>
+        
+        {% if messages %}
+            <ul class="error-messages">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn">Login</button>
+        </form>
+
+        <a href="{% url 'register' %}" class="register-link">Don't have an account? Register here.</a>
+        <div class="forgot-password">
+            <a href="{% url 'forgot_password' %}">Forgot your password?</a>
+        </div>
+        
+        <!-- Admin Login Option -->
+        <a href="{% url 'admin_login' %}" class="admin-link">Are you an admin? Login here.</a>
+    </div>
+</body>
+</html>

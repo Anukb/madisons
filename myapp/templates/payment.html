@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Madison Magazine Subscription Payment</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/pay.css' %}">
+<style>
+        </style>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Madison Magazine Payment</h1>
+        <section class="subscription-plans">
+            <div class="plan" onclick="selectPlan('monthly', 499)">
+                <h3>Monthly Plan</h3>
+                <p>₹499 per month</p>
+                <p>Access to premium content</p>
+                <p>Ad-free experience</p>
+            </div>
+            <div class="plan" onclick="selectPlan('yearly', 4999)">
+                <h3>Yearly Plan</h3>
+                <p>₹4999 per year</p>
+                <p>10% discount</p>
+                <p>Access to premium content</p>
+                <p>Exclusive events</p>
+            </div>
+            <div class="plan" onclick="selectPlan('premium', 7999)">
+                <h3>Premium Plan</h3>
+                <p>₹7999 per year</p>
+                <p>All benefits of Yearly Plan</p>
+                <p>Detailed analytics</p>
+            </div>
+        </section>
+
+        <section class="payment-details">
+            <h2>Payment Details</h2>
+            <label for="card-number">Card Number</label>
+            <input type="text" id="card-number" placeholder="Enter card number">
+
+            <label for="expiry-date">Expiration Date</label>
+            <input type="text" id="expiry-date" placeholder="MM/YY">
+
+            <label for="cvv">CVV</label>
+            <input type="text" id="cvv" placeholder="Enter CVV">
+        </section>
+
+        <section class="coupon-code">
+            <h2>Apply Coupon Code</h2>
+            <label for="coupon">Coupon Code</label>
+            <input type="text" id="coupon" placeholder="Enter coupon code">
+        </section>
+
+        <section class="payment-button">
+            <button class="pay-now" onclick="payNow()">Pay Now</button>
+            <button class="cancel" onclick="cancelPayment()">Cancel</button>
+        </section>
+
+        <div id="message" class="message" style="display:none;"></div>
+    </div>
+
+    <script>
+        let selectedPlan = null;
+        let paymentAmount = 0;
+
+        function selectPlan(plan, amount) {
+            selectedPlan = plan;
+            paymentAmount = amount;
+            document.querySelectorAll('.plan').forEach(plan => {
+                plan.classList.remove('selected');
+            });
+            document.querySelector(`.plan:contains('${plan.charAt(0).toUpperCase() + plan.slice(1)}')`).classList.add('selected');
+        }
+
+        function payNow() {
+            if (!selectedPlan) {
+                alert("Please select a subscription plan.");
+                return;
+            }
+            
+            let options = {
+                "key": "YOUR_RAZORPAY_API_KEY",
+                "amount": paymentAmount * 100,
+                "currency": "INR",
+                "name": "Madison Magazine",
+                "description": "Subscription Payment",
+                "handler": function (response) {
+                    document.getElementById('message').innerHTML = "Payment successful! Transaction ID: " + response.razorpay_payment_id;
+                    document.getElementById('message').className = "message success";
+                    document.getElementById('message').style.display = "block";
+                },
+                "modal": {
+                    "ondismiss": function(){
+                        document.getElementById('message').innerHTML = "Payment cancelled.";
+                        document.getElementById('message').className = "message error";
+                        document.getElementById('message').style.display = "block";
+                    }
+                },
+                "prefill": {
+                    "email": "johndoe@example.com"
+                }
+            };
+
+            let razorpay = new Razorpay(options);
+            razorpay.open();
+        }
+
+        function cancelPayment() {
+            document.getElementById('message').innerHTML = "Payment cancelled.";
+            document.getElementById('message').className = "message error";
+            document.getElementById('message').style.display = "block";
+        }
+    </script>
+</body>
+</html>

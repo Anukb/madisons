@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - Madison</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <h1>Madison Magazine</h1>
+            <ul>
+                <li><a href="{% url 'home' %}">Home</a></li>
+                <li><a href="{% url 'profile' %}">Profile</a></li>
+                <li><a href="{% url 'recommendations' %}">For You</a></li>
+                <li><a href="{% url 'logout' %}">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="profile-container">
+        <h2>User Profile</h2>
+        <form id="profile-form" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="profile-picture">
+                <label for="profile-pic" id="file-label" class="file-label">Profile Picture</label>
+                <input type="file" id="profile-pic" name="profile_pic" accept="image/*" style="display: none;">
+                <div class="image-preview" id="image-preview">
+                    <img id="preview" src="{{ user.profile.profile_pic.url }}" alt="Profile Picture Preview">
+                </div>
+                <button type="button" id="set-dp" class="save-button" style="display: none;">Set as Profile Picture</button>
+            </div>
+            <div class="user-details">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" value="{{ user.first_name }} {{ user.last_name }}" required>
+                
+                <label for="bio">Bio:</label>
+                <textarea id="bio" name="bio">{{ user.bio }}</textarea>
+                
+                <label for="interests">Interests:</label>
+                <div class="interests">
+                    {% for category in categories %}
+                        <label>
+                            <input type="checkbox" name="interests" value="{{ category.id }}" {% if category in user_preferences.preferred_categories.all %}checked{% endif %}>
+                            {{ category.name }}
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+            <button type="submit" class="save-button">Save Changes</button>
+            <a href="{% url 'home' %}" class="back-button">Back to Home</a>
+        </form>
+
+        <div class="preferences-section">
+            <h3>Your Interests</h3>
+            <form method="post" action="{% url 'update_preferences' %}">
+                {% csrf_token %}
+                <div class="categories-list">
+                    {% for category in categories %}
+                    <label>
+                        <input type="checkbox" name="categories" value="{{ category.id }}" 
+                               {% if category in user_preferences.preferred_categories.all %}checked{% endif %}>
+                        {{ category.name }}
+                    </label>
+                    {% endfor %}
+                </div>
+                <button type="submit" class="save-button">Update Preferences</button>
+            </form>
+        </div>
+
+        <div class="reading-history">
+            <h3>Reading History</h3>
+            <div class="history-list">
+                {% if history %}
+                    {% for viewed_article in history %}
+                        <div class="history-card">
+                            <img src="{{ viewed_article.article.image.url }}" alt="{{ viewed_article.article.title }}">
+                            <h4>{{ viewed_article.article.title }}</h4>
+                            <p>Viewed on: {{ viewed_article.viewed_at|date:"F j, Y" }}</p>
+                            <a href="{% url 'article_detail' viewed_article.article.id %}">Read more</a>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <img src="{% static 'images/empty-state.png' %}" alt="No Reading History" class="empty-state-image">
+                        <p>No reading history available. Explore articles to start your journey!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 Madison Magazine. All rights reserved.</p>
+    </footer>
+
+    <script src="{% static 'js/profile.js' %}"></script>
+</body>
+</html> 

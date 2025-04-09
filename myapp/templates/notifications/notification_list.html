@@ -1,0 +1,15 @@
+{% if notifications %}
+    {% for notification in notifications %}
+        <div class="notification-item {% if not notification.is_read %}unread{% endif %}">
+            <div class="notification-content">
+                <h4>{{ notification.title }}</h4>
+                <p>{{ notification.message }}</p>
+                <span class="notification-time">{{ notification.created_at|timesince }} ago</span>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="notification-item">
+        <p>No notifications</p>
+    </div>
+{% endif %} 

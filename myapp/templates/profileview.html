@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Madison</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>Profile</h1>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Save</button>
+        </form>
+        
+        <!-- New section for personalized content recommendations -->
+        <div class="recommendations">
+            <h2>Personalized Recommendations</h2>
+            <ul>
+                {% for recommendation in recommendations %}
+                    <li>{{ recommendation }}</li>
+                {% empty %}
+                    <li>No recommendations available at this time.</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <!-- End of recommendations section -->
+    </div>
+</body>
+</html>

@@ -1,0 +1,31 @@
+
+
+
+{% block content %}
+<h1>Edit Profile</h1>
+<form method="post">
+    {% csrf_token %}
+    <div>
+        <label for="first_name">First Name:</label>
+        <input type="text" name="first_name" value="{{ request.user.first_name }}" required>
+    </div>
+    <div>
+        <label for="last_name">Last Name:</label>
+        <input type="text" name="last_name" value="{{ request.user.last_name }}" required>
+    </div>
+    <div>
+        <label for="email">Email:</label>
+        <input type="email" name="email" value="{{ request.user.email }}" required>
+    </div>
+    <div>
+        <label for="user_type">User Type:</label>
+        <input type="text" name="user_type" value="{{ profile.user_type }}" required>
+    </div>
+    <div>
+        <label for="bio">Bio:</label>
+        <textarea name="bio">{{ profile.bio }}</textarea>
+    </div>
+    <button type="submit">Save Changes</button>
+</form>
+<a href="{% url 'profile' %}">Back to Profile</a>
+{% endblock %}

@@ -1,0 +1,154 @@
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f4f7fa;
+            font-family: 'Arial', sans-serif;
+        }
+
+        h2 {
+            color: #333;
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+
+        .card {
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            color: #007bff;
+        }
+
+        .card-text {
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .form-control {
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+        }
+
+        .form-control:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+
+        .btn {
+            font-size: 1rem;
+            padding: 10px;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+
+        .mt-3 {
+            margin-top: 1rem;
+        }
+    </style>
+    <title>User Profile</title>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">User Profile</h2>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">{{ user.username }}</h5>
+                        <p class="card-text">{{ profile.bio|default:"No bio available." }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <form method="post" enctype="multipart/form-data" class="border p-4 rounded" onsubmit="return validateForm()">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="first_name">First Name</label>
+                        <input type="text" name="first_name" id="first_name" class="form-control" value="{{ user.first_name }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="last_name">Last Name</label>
+                        <input type="text" name="last_name" id="last_name" class="form-control" value="{{ user.last_name }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" name="email" id="email" class="form-control" value="{{ user.email }}">
+                    </div>
+                    <button type="submit" class="btn btn-success btn-block">Save Changes</button>
+                </form>
+            </div>
+        </div>
+        <a href="{% url 'home' %}" class="btn btn-secondary mt-3">Back to Home</a>
+    </div>
+
+    <script>
+        function validateForm() {
+            let firstName = document.getElementById('first_name').value;
+            let lastName = document.getElementById('last_name').value;
+            let email = document.getElementById('email').value;
+
+            // Regex for First and Last Name (only letters)
+            let regexName = /^[A-Za-z]+$/;  
+            // Regex for Gmail Email validation (must contain @gmail.com)
+            let regexEmail = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;  
+
+            // First Name validation
+            if (!firstName.trim()) {
+                alert("First Name is required.");
+                return false;
+            }
+            if (!regexName.test(firstName)) {
+                alert("First Name should only contain letters.");
+                return false;
+            }
+
+            // Last Name validation
+            if (!lastName.trim()) {
+                alert("Last Name is required.");
+                return false;
+            }
+            if (!regexName.test(lastName)) {
+                alert("Last Name should only contain letters.");
+                return false;
+            }
+
+            // Email validation (must be a Gmail address)
+            if (!email.trim()) {
+                alert("Email is required.");
+                return false;
+            }
+            if (!regexEmail.test(email)) {
+                alert("Please enter a valid Gmail address (e.g., user@gmail.com).");
+                return false;
+            }
+
+            return true;
+        }
+    </script>
+</body>
+</html>
+{% endblock %}

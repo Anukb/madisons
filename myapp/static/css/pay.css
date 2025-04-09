@@ -1,0 +1,93 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+.container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+h1, h2, h3 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+.subscription-plans {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+}
+.plan {
+    background-color: #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    width: 30%;
+    text-align: center;
+    cursor: pointer;
+}
+.plan.selected {
+    border: 2px solid #007BFF;
+}
+.plan h3 {
+    margin: 10px 0;
+}
+.plan p {
+    margin: 5px 0;
+}
+.payment-details, .coupon-code, .payment-button {
+    margin-top: 20px;
+}
+.payment-details label, .coupon-code label {
+    display: block;
+    margin-bottom: 5px;
+}
+.payment-details input, .coupon-code input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+.payment-button {
+    display: flex;
+    justify-content: space-between;
+}
+.payment-button button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.payment-button .pay-now {
+    background-color: #28a745;
+    color: white;
+}
+.payment-button .pay-now:hover {
+    background-color: #218838;
+}
+.payment-button .cancel {
+    background-color: #dc3545;
+    color: white;
+}
+.payment-button .cancel:hover {
+    background-color: #c82333;
+}
+.message {
+    text-align: center;
+    padding: 10px;
+    border-radius: 4px;
+    margin-top: 20px;
+}
+.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+.error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
