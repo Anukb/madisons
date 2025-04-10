@@ -32,7 +32,7 @@ DEBUG = True
 # ALLOWED_HOSTS = ['madison-magazine-8.onrender.com', '127.0.0.1']
 
 # ALLOWED_HOSTS = ['madison-magazine-8.onrender.com']
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['madison-magazine.onrender.com', '127.0.0.1', 'localhost']
 
 
 
