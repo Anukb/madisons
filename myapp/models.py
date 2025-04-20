@@ -277,3 +277,31 @@ class AdminLog(models.Model):
     def __str__(self):
         return f"{self.admin.username} - {self.action} - {self.target_model}"
 
+class Report(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('reviewing', 'Under Review'),
+        ('resolved', 'Resolved')
+    ]
+
+    article = models.ForeignKey(Articles, on_delete=models.CASCADE, related_name='reports')
+    reporter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='submitted_reports')
+    reason = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    admin_notes = models.TextField(blank=True, null=True)
+    resolved_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='resolved_reports'
+    )
+
+    def __str__(self):
+        return f"Report for {self.article.title} by {self.reporter.username}"
+
+    class Meta:
+        ordering = ['-created_at']
+

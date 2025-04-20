@@ -13,3 +13,6 @@ services:
         generateValue: true
       - key: WEB_CONCURRENCY
         value: 4
+    runtime:
+      pythonVersion: 3.10
+pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu

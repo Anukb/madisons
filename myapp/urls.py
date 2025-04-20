@@ -13,11 +13,12 @@ from .views import (
     mark_all_notifications_read, search_articles, test_notification, create_announcement,
     test_announcement, generate_summary, create_article, edit_article,
     delete_article, article_dashboard, user_drafts,
-    delete_category, update_category, add_article, view_articles, article_detail,
+    delete_category, add_article, view_articles, article_detail,
     admin_dashboard, admin_user_management, admin_toggle_user_status,
     admin_content_moderation, admin_handle_complaint, admin_event_management, admin_analytics,
     admin_get_article, admin_approve_article, admin_reject_article, welcome_notification,
-    admin_verify_user, admin_get_user_details, admin_delete_user, admin_export_users
+    admin_verify_user, admin_get_user_details, admin_delete_user, admin_export_users,
+    edit_category
 )
 
 urlpatterns = [
@@ -45,9 +46,9 @@ urlpatterns = [
     path('custom-admin/complaints/<int:complaint_id>/', admin_handle_complaint, name='admin_handle_complaint'),
     path('custom-admin/events/', admin_event_management, name='admin_events'),
     path('custom-admin/analytics/', admin_analytics, name='admin_analytics'),
-    path('add_category/', add_category, name='add_category'),
-    path('delete_category/<int:category_id>/', delete_category, name='delete_category'),
-    path('update_category/<int:category_id>/', update_category, name='update_category'),
+    path('admin/add-category/', add_category, name='add_category'),
+    path('admin/edit-category/<int:category_id>/', edit_category, name='edit_category'),
+    path('admin/delete-category/<int:category_id>/', delete_category, name='delete_category'),
     path('add-article/', add_article, name='add_article'),
     path('articles/', view_articles, name='view_articles'),
     path('article/<int:article_id>/', article_detail, name='article_detail'),
