@@ -1,0 +1,175 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <!-- Third-party libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
+    <script src="https://cdn.jsdelivr.net/npm/perfect-scrollbar@1.5.5/dist/perfect-scrollbar.min.js"></script>
+</head>
+<body>
+    <div id="particles-js" class="particles-container"></div>
+    
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <img src="{% static 'images/logo.png' %}" alt="Logo" class="logo">
+                <button class="sidebar-toggle" aria-label="Toggle Sidebar">
+                    <span></span>
+                </button>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-link active" data-tooltip="Dashboard">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-link" data-tooltip="Users">
+                    <i class="fas fa-users"></i>
+                    <span>Users</span>
+                </a>
+                <a href="#" class="nav-link" data-tooltip="Analytics">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="#" class="nav-link" data-tooltip="Settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button class="dark-mode-toggle" aria-label="Toggle Dark Mode">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <a href="#" class="profile-link">
+                    <img src="{% static 'images/avatar.png' %}" alt="Profile" class="avatar">
+                    <span>Admin User</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <header class="admin-header">
+                <div class="search-container">
+                    <div class="search-bar">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search...">
+                    </div>
+                </div>
+                
+                <div class="header-actions">
+                    <button class="notification-btn" data-tooltip="Notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </button>
+                    <button class="help-btn" data-tooltip="Help">
+                        <i class="fas fa-question-circle"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="dashboard-content">
+                {% block content %}
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stats-card">
+                        <div class="stats-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stats-info">
+                            <h3>Total Users</h3>
+                            <p class="stats-number">{{ total_users|default:"1,234" }}</p>
+                            <span class="stats-trend positive">
+                                <i class="fas fa-arrow-up"></i> 12.5%
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-card">
+                        <div class="stats-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stats-info">
+                            <h3>Revenue</h3>
+                            <p class="stats-number">${{ total_revenue|default:"45,678" }}</p>
+                            <span class="stats-trend positive">
+                                <i class="fas fa-arrow-up"></i> 8.3%
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-card">
+                        <div class="stats-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="stats-info">
+                            <h3>Orders</h3>
+                            <p class="stats-number">{{ total_orders|default:"567" }}</p>
+                            <span class="stats-trend negative">
+                                <i class="fas fa-arrow-down"></i> 3.2%
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-card">
+                        <div class="stats-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="stats-info">
+                            <h3>Rating</h3>
+                            <p class="stats-number">{{ avg_rating|default:"4.8" }}</p>
+                            <span class="stats-trend positive">
+                                <i class="fas fa-arrow-up"></i> 0.5%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="charts-section">
+                    <div class="chart-container">
+                        <h2>Activity Overview</h2>
+                        <canvas id="activityChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="recent-activity custom-scroll">
+                    <h2>Recent Activity</h2>
+                    <div class="activity-list">
+                        {% for activity in recent_activities|default:default_activities %}
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="{{ activity.icon|default:'fas fa-user-plus' }}"></i>
+                            </div>
+                            <div class="activity-details">
+                                <p>{{ activity.description|default:"New user registration" }}</p>
+                                <span>{{ activity.user|default:"John Doe" }}</span>
+                                <small>{{ activity.time|default:"2 minutes ago" }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom JavaScript -->
+    <script src="{% static 'js/admin.js' %}"></script>
+</body>
+</html>

@@ -144,36 +144,42 @@
         <!-- Dashboard Section -->
         <section id="dashboard" class="content-section active">
             <h2 class="mb-4">Dashboard Overview</h2>
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="stats-card bg-primary text-white">
-                        <h3>Total Users</h3>
-                        <p>{{ total_users }}</p>
-                        <small>{{ new_users_today }} new today</small>
-                    </div>
+            <div class="stats-cards">
+                <div class="dashboard-stats-container">
+
+                <div class="stats-card">
+                    <h3>Total Articles</h3>
+                    <p>{{ total_articles }}</p>
                 </div>
-                <div class="col-md-3">
-                    <div class="stats-card bg-success text-white">
-                        <h3>Articles</h3>
-                        <p>{{ total_articles }}</p>
-                        <small>{{ pending_articles }} pending review</small>
-                    </div>
+                <div class="stats-card">
+                    <h3>Active Users</h3>
+                    <p>{{ active_users }}</p>
                 </div>
-                <div class="col-md-3">
-                    <div class="stats-card bg-warning text-white">
-                        <h3>Events</h3>
-                        <p>{{ total_events }}</p>
-                        <small>{{ active_events }} active</small>
-                    </div>
+                <div class="stats-card">
+                    <h3>Total Users</h3>
+                    <p>{{ total_users }}</p>
+                    <small>{{ new_users_today }} new today</small>
                 </div>
-                <div class="col-md-3">
-                    <div class="stats-card bg-danger text-white">
-                        <h3>Complaints</h3>
-                        <p>{{ total_complaints }}</p>
-                        <small>{{ open_complaints }} open</small>
-                    </div>
+                <div class="stats-card">
+                    <h3>Events</h3>
+                    <p>{{ total_events }}</p>
+                    <small>{{ active_events }} active</small>
                 </div>
-    </div>
+                <div class="stats-card">
+                    <h3>Complaints</h3>
+                    <p>{{ total_complaints }}</p>
+                    <small>{{ open_complaints }} open</small>
+                </div>
+            </div>
+        </div>
+            <div class="recent-activities">
+                <h2>Recent Activities</h2>
+                <ul>
+                    {% for activity in recent_activities %}
+                        <li>{{ activity }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
 
             <div class="row mt-4">
                 <div class="col-md-6">
@@ -419,8 +425,9 @@
         </section>
 
         <!-- Content Moderation Section -->
-        <section id="content" class="content-section">
+        <section id="content" class="content-section active">
             <h2 class="mb-4">Content Moderation</h2>
+            <a href="{% url 'add_category' %}" class="btn btn-primary">Add New Category</a>
             <div class="card">
                 <div class="card-body">
                     <div class="table-responsive">
@@ -434,21 +441,56 @@
                                     <th>Actions</th>
                                 </tr>
                             </thead>
+                            
+        <!-- Categories Section -->
+        <section id="categories" class="content-section">
+            <h2 class="mb-4">Categories Management</h2>
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Created At</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for category in categories %}
+                                <tr>
+                                    <td>{{ category.name }}</td>
+                                    <td>{{ category.description }}</td>
+                                    <td>{{ category.created_at|date:"F j, Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'edit_category' category.id %}" class="btn btn-warning">Edit</a>
+                                        <a href="{% url 'delete_category' category.id %}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this category?')">Delete</a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4">No categories found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
                             <tbody>
                                 {% for article in articles %}
                                 <tr>
                                     <td>{{ article.title }}</td>
                                     <td>{{ article.author.username }}</td>
                                     <td>{{ article.category.name }}</td>
+                                    <td>{{ article.status }}</td>
                                     <td>
-                                        <span class="badge {% if article.status == 'published' %}bg-success{% else %}bg-warning{% endif %}">
-                                            {{ article.status }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-sm btn-primary view-article" data-article-id="{{ article.id }}">View</button>
-                                        <button class="btn btn-sm btn-success approve-article" data-article-id="{{ article.id }}">Approve</button>
-                                        <button class="btn btn-sm btn-danger reject-article" data-article-id="{{ article.id }}">Reject</button>
+                                        <a href="{% url 'admin_get_article' article.id %}" class="btn btn-info">View</a>
+                                        <a href="{% url 'admin_approve_article' article.id %}" class="btn btn-success">Approve</a>
+                                        <a href="{% url 'admin_reject_article' article.id %}" class="btn btn-danger">Reject</a>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -460,9 +502,35 @@
         </section>
 
         <!-- Analytics Section -->
-        <section id="analytics" class="content-section">
+        <section id="analytics" class="content">
             <h2 class="mb-4">Analytics</h2>
             <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Users</h5>
+                            <p class="card-text">{{ total_users }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Articles</h5>
+                            <p class="card-text">{{ total_articles }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Views</h5>
+                            <p class="card-text">{{ total_views }}</p>
+                        </div>
+                    </div>
+                </div>
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-body">
@@ -473,6 +541,8 @@
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="row mt-4">
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-body">
@@ -644,9 +714,6 @@
     </div>
 </div>
 
-<a href="{% url 'add_category' %}" class="btn btn-primary">
-    <i class="fas fa-plus"></i> Add New Category
-</a>
 {% endblock %}
 
 {% block extra_js %}

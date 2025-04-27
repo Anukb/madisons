@@ -1,0 +1,1253 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Article | Madison Magazine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff4dff;
+            --secondary: #00f2ff;
+            --accent: #ffeb3b;
+            --dark: #0a0a20;
+            --light: #f8f8ff;
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-dark: rgba(10, 10, 32, 0.7);
+            --neon-pink: #ff00ff;
+            --neon-blue: #00ffff;
+            --neon-yellow: #ffff00;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--dark);
+            color: var(--light);
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(255, 77, 255, 0.15) 0%, transparent 25%),
+                radial-gradient(circle at 80% 70%, rgba(0, 242, 255, 0.15) 0%, transparent 25%),
+                linear-gradient(to bottom, var(--dark), var(--dark));
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Particle background */
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            position: relative;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.8rem;
+            color: var(--light);
+            text-decoration: none;
+            background: linear-gradient(45deg, var(--neon-pink), var(--neon-blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            padding: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .logo::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 L0,100 Z" fill="none" stroke="%23ff00ff" stroke-width="2" stroke-dasharray="5,5"/></svg>');
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .logo:hover::after {
+            opacity: 0.5;
+            animation: ripple 1.5s infinite;
+        }
+
+        @keyframes ripple {
+            0% { transform: scale(1); opacity: 0.5; }
+            100% { transform: scale(1.1); opacity: 0; }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .nav-link {
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: all 0.5s ease;
+        }
+
+        .nav-link:hover {
+            background: var(--glass);
+            color: var(--neon-pink);
+        }
+
+        .nav-link:hover::before {
+            left: 100%;
+        }
+
+        /* Search and Filter */
+        .search-filter {
+            margin-top: 80px;
+            padding: 1.5rem 2rem;
+            background: var(--glass-dark);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .search-container {
+            position: relative;
+            flex-grow: 1;
+            max-width: 600px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.8rem 1.5rem 0.8rem 3rem;
+            border: none;
+            border-radius: 30px;
+            background: var(--glass);
+            color: var(--light);
+            font-size: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(0, 242, 255, 0.1);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--neon-pink);
+            box-shadow: 0 0 15px var(--neon-pink);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--light);
+            opacity: 0.7;
+        }
+
+        .filter-dropdown {
+            position: relative;
+            min-width: 200px;
+        }
+
+        .filter-button {
+            width: 100%;
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(45deg, var(--neon-pink), var(--neon-blue));
+            border: none;
+            border-radius: 30px;
+            color: var(--dark);
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.3);
+        }
+
+        .filter-button:hover {
+            box-shadow: 0 0 20px var(--neon-pink);
+            transform: translateY(-2px);
+        }
+
+        .filter-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--glass-dark);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 0.5rem 0;
+            margin-top: 0.5rem;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            z-index: 100;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .filter-dropdown.active .filter-options {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .filter-option {
+            padding: 0.8rem 1.5rem;
+            color: var(--light);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-option:hover {
+            background: var(--glass);
+            color: var(--neon-pink);
+        }
+
+        /* Article Detail */
+        .article-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .article-header {
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+            border-radius: 15px;
+            height: 400px;
+            display: flex;
+            align-items: flex-end;
+            background: linear-gradient(45deg, #0f0c29, #302b63, #24243e);
+        }
+
+        .article-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.7;
+            z-index: 1;
+        }
+
+        .article-header-content {
+            position: relative;
+            z-index: 2;
+            padding: 2rem;
+            width: 100%;
+            background: linear-gradient(to top, rgba(10, 10, 32, 0.9), transparent);
+        }
+
+        .category-label {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(45deg, var(--neon-pink), var(--neon-blue));
+            color: var(--dark);
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .article-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, var(--neon-pink), var(--neon-yellow));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            line-height: 1.2;
+        }
+
+        .article-meta {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .stars {
+            color: var(--accent);
+            display: flex;
+            gap: 0.2rem;
+        }
+
+        .article-content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 992px) {
+            .article-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .article-body {
+            background: var(--glass-dark);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .article-body p {
+            margin-bottom: 1.5rem;
+            line-height: 1.8;
+        }
+
+        .article-body h2, .article-body h3 {
+            font-family: 'Orbitron', sans-serif;
+            margin: 2rem 0 1rem;
+            color: var(--neon-blue);
+        }
+
+        .article-body h2 {
+            font-size: 1.8rem;
+        }
+
+        .article-body h3 {
+            font-size: 1.4rem;
+        }
+
+        .article-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .sidebar-card {
+            background: var(--glass-dark);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(255, 0, 255, 0.3);
+        }
+
+        .sidebar-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--neon-pink);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .related-articles {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .related-article {
+            display: flex;
+            gap: 1rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .related-article:hover {
+            border-bottom-color: var(--neon-pink);
+        }
+
+        .related-article img {
+            width: 80px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .related-article-content {
+            flex: 1;
+        }
+
+        .related-article-title {
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+            color: var(--light);
+            transition: all 0.3s ease;
+        }
+
+        .related-article:hover .related-article-title {
+            color: var(--neon-pink);
+        }
+
+        .related-article-meta {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .ai-summary {
+            position: relative;
+            padding: 1.5rem;
+            border-radius: 15px;
+            background: linear-gradient(135deg, rgba(255, 77, 255, 0.1), rgba(0, 242, 255, 0.1));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .ai-summary::before {
+            content: 'AI SUMMARY';
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            background: var(--dark);
+            padding: 0 10px;
+            font-size: 0.7rem;
+            color: var(--neon-blue);
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .ai-summary-content {
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .tag:hover {
+            background: var(--neon-pink);
+            color: var(--dark);
+            transform: translateY(-2px);
+        }
+
+        .article-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .action-button {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 30px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .like-button {
+            background: rgba(255, 77, 255, 0.2);
+            color: var(--neon-pink);
+            border: 1px solid var(--neon-pink);
+        }
+
+        .like-button:hover {
+            background: rgba(255, 77, 255, 0.4);
+            box-shadow: 0 0 15px var(--neon-pink);
+        }
+
+        .save-button {
+            background: rgba(0, 242, 255, 0.2);
+            color: var(--neon-blue);
+            border: 1px solid var(--neon-blue);
+        }
+
+        .save-button:hover {
+            background: rgba(0, 242, 255, 0.4);
+            box-shadow: 0 0 15px var(--neon-blue);
+        }
+
+        .share-button {
+            background: rgba(255, 235, 59, 0.2);
+            color: var(--neon-yellow);
+            border: 1px solid var(--neon-yellow);
+        }
+
+        .share-button:hover {
+            background: rgba(255, 235, 59, 0.4);
+            box-shadow: 0 0 15px var(--neon-yellow);
+        }
+
+        /* Footer */
+        .footer {
+            background: linear-gradient(to top, #0a0a20, #1a1a3a);
+            padding: 4rem 2rem 2rem;
+            position: relative;
+            margin-top: 4rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".25" fill="%23ff00ff"></path><path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" opacity=".5" fill="%23ff00ff"></path><path d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z" fill="%23ff00ff"></path></svg>');
+            background-size: cover;
+            background-repeat: no-repeat;
+            transform: rotate(180deg);
+            opacity: 0.1;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .footer-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.8rem;
+            color: var(--light);
+            text-decoration: none;
+            background: linear-gradient(45deg, var(--neon-pink), var(--neon-blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+
+        .footer-description {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .social-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            color: var(--light);
+            text-decoration: none;
+        }
+
+        .social-icon:hover {
+            background: var(--neon-pink);
+            color: var(--dark);
+            transform: translateY(-3px);
+        }
+
+        .footer-links-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            color: var(--neon-blue);
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-link {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-link a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            display: inline-block;
+            position: relative;
+        }
+
+        .footer-link a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--neon-pink);
+            transition: width 0.3s ease;
+        }
+
+        .footer-link a:hover {
+            color: var(--neon-pink);
+        }
+
+        .footer-link a:hover::after {
+            width: 100%;
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 2rem auto 0;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .footer-watermark {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            opacity: 0.05;
+            font-size: 10rem;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            background: linear-gradient(45deg, var(--neon-pink), var(--neon-blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            z-index: 1;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px var(--neon-pink); }
+            100% { box-shadow: 0 0 20px var(--neon-pink); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 1rem;
+            }
+
+            .nav-links {
+                gap: 0.5rem;
+            }
+
+            .nav-link {
+                padding: 0.5rem;
+                font-size: 0.9rem;
+            }
+
+            .search-filter {
+                padding: 1rem;
+                margin-top: 70px;
+            }
+
+            .article-title {
+                font-size: 2rem;
+            }
+
+            .article-header {
+                height: 300px;
+            }
+
+            .article-header-content {
+                padding: 1.5rem;
+            }
+
+            .article-meta {
+                gap: 1rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .logo {
+                font-size: 1.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .article-title {
+                font-size: 1.8rem;
+            }
+
+            .article-header {
+                height: 250px;
+            }
+
+            .footer {
+                padding: 3rem 1rem 2rem;
+            }
+
+            .footer-watermark {
+                font-size: 5rem;
+                bottom: 10px;
+                right: 10px;
+            }
+        }
+
+        /* Accessibility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        /* Focus styles */
+        a:focus, button:focus, input:focus, select:focus, textarea:focus {
+            outline: 2px solid var(--neon-yellow);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Particle Background -->
+    <div id="particles-js"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar" aria-label="Main navigation">
+        <a href="{% url 'home' %}" class="logo" aria-label="Madison Magazine Home">
+            MADISON
+        </a>
+        <div class="nav-links">
+            <a href="{% url 'home' %}" class="nav-link" aria-current="page">Home</a>
+            <a href="{% url 'categories' %}" class="nav-link">Categories</a>
+            <a href="{% url 'search' %}" class="nav-link">Search</a>
+            <a href="{% url 'profile' %}" class="nav-link">Profile</a>
+        </div>
+    </nav>
+
+    <!-- Search and Filter -->
+    <div class="search-filter">
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="search" class="search-input" placeholder="Search articles..." aria-label="Search articles" value="{{ query|default:'' }}">
+        </div>
+        <div class="filter-dropdown">
+            <button class="filter-button" aria-expanded="false" aria-controls="filter-options">
+                <span>{% if selected_category %}{{ selected_category }}{% else %}All Categories{% endif %}</span>
+                <span>▼</span>
+            </button>
+            <ul class="filter-options" id="filter-options" role="listbox">
+                <li class="filter-option" role="option" data-value="">All Categories</li>
+                {% for category in categories %}
+                <li class="filter-option" role="option" data-value="{{ category.slug }}">{{ category.name }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Article Detail -->
+    <main class="article-container">
+        <article>
+            <header class="article-header">
+                <img src="{{ article.featured_image.url }}" alt="{{ article.title }}" class="article-image">
+                <div class="article-header-content">
+                    <span class="category-label">{{ article.category.name }}</span>
+                    <h1 class="article-title">{{ article.title }}</h1>
+                    <div class="article-meta">
+                        <div class="meta-item">
+                            <span class="author">By {{ article.author.get_full_name }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="date">{{ article.publish_date|date:"F j, Y" }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <div class="stars">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= article.rating %}
+                                        ★
+                                    {% else %}
+                                        ☆
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="meta-item">
+                            <span class="read-time">{{ article.read_time }} min read</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="article-content">
+                <div class="article-body">
+                    {{ article.content|safe }}
+
+                    <div class="tags">
+                        {% for tag in article.tags.all %}
+                        <a href="{% url 'tag' tag.slug %}" class="tag">#{{ tag.name }}</a>
+                        {% endfor %}
+                    </div>
+
+                    <div class="article-actions">
+                        <button class="action-button like-button" aria-label="Like this article">
+                            <span>👍</span> Like ({{ article.likes.count }})
+                        </button>
+                        <button class="action-button save-button" aria-label="Save this article">
+                            <span>🔖</span> Save
+                        </button>
+                        <button class="action-button share-button" aria-label="Share this article">
+                            <span>↗️</span> Share
+                        </button>
+                    </div>
+                </div>
+
+                <aside class="article-sidebar" aria-label="Article sidebar">
+                    <div class="sidebar-card">
+                        <h2 class="sidebar-title">
+                            <span>✨</span> AI Summary
+                        </h2>
+                        <div class="ai-summary">
+                            <div class="ai-summary-content">
+                                {{ article.ai_summary|default:"This article discusses "|add:article.title|truncatewords:50 }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-card">
+                        <h2 class="sidebar-title">
+                            <span>📚</span> Related Articles
+                        </h2>
+                        <div class="related-articles">
+                            {% for related in related_articles %}
+                            <a href="{% url 'article_detail' related.slug %}" class="related-article">
+                                <img src="{{ related.featured_image.url }}" alt="{{ related.title }}" loading="lazy">
+                                <div class="related-article-content">
+                                    <h3 class="related-article-title">{{ related.title }}</h3>
+                                    <div class="related-article-meta">
+                                        <span>{{ related.publish_date|date:"M j, Y" }}</span> •
+                                        <span>{{ related.read_time }} min read</span>
+                                    </div>
+                                </div>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="sidebar-card">
+                        <h2 class="sidebar-title">
+                            <span>📝</span> About the Author
+                        </h2>
+                        <div class="author-info">
+                            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                                <img src="{{ article.author.profile.image.url }}" alt="{{ article.author.get_full_name }}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">
+                                <div>
+                                    <h3 style="margin: 0; color: var(--neon-pink);">{{ article.author.get_full_name }}</h3>
+                                    <p style="margin: 0; font-size: 0.9rem; color: rgba(255, 255, 255, 0.7);">{{ article.author.profile.title }}</p>
+                                </div>
+                            </div>
+                            <p style="font-size: 0.9rem; line-height: 1.7;">{{ article.author.profile.bio|truncatewords:30 }}</p>
+                            <a href="{% url 'author' article.author.username %}" style="display: inline-block; margin-top: 1rem; color: var(--neon-blue); text-decoration: none; font-size: 0.9rem;">View full profile →</a>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </article>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer" role="contentinfo">
+        <div class="footer-watermark">MADISON</div>
+        <div class="footer-content">
+            <div class="footer-col">
+                <a href="{% url 'home' %}" class="footer-logo">MADISON</a>
+                <p class="footer-description">
+                    Madison Magazine brings you the latest in cyber culture, technology, and futuristic lifestyle.
+                </p>
+                <div class="footer-social">
+                    <a href="#" class="social-icon" aria-label="Twitter"><span>𝕏</span></a>
+                    <a href="#" class="social-icon" aria-label="Instagram"><span>📸</span></a>
+                    <a href="#" class="social-icon" aria-label="Discord"><span>💬</span></a>
+                    <a href="#" class="social-icon" aria-label="TikTok"><span>🎵</span></a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h3 class="footer-links-title">Explore</h3>
+                <ul class="footer-links">
+                    <li class="footer-link"><a href="{% url 'home' %}">Home</a></li>
+                    <li class="footer-link"><a href="{% url 'categories' %}">Categories</a></li>
+                    <li class="footer-link"><a href="{% url 'popular' %}">Popular</a></li>
+                    <li class="footer-link"><a href="{% url 'latest' %}">Latest</a></li>
+                    <li class="footer-link"><a href="{% url 'authors' %}">Authors</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h3 class="footer-links-title">Company</h3>
+                <ul class="footer-links">
+                    <li class="footer-link"><a href="{% url 'about' %}">About Us</a></li>
+                    <li class="footer-link"><a href="{% url 'careers' %}">Careers</a></li>
+                    <li class="footer-link"><a href="{% url 'press' %}">Press</a></li>
+                    <li class="footer-link"><a href="{% url 'partners' %}">Partners</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h3 class="footer-links-title">Legal</h3>
+                <ul class="footer-links">
+                    <li class="footer-link"><a href="{% url 'privacy' %}">Privacy Policy</a></li>
+                    <li class="footer-link"><a href="{% url 'terms' %}">Terms of Service</a></li>
+                    <li class="footer-link"><a href="{% url 'cookies' %}">Cookie Policy</a></li>
+                    <li class="footer-link"><a href="{% url 'contact' %}">Contact Us</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; {% now "Y" %} Madison Magazine. All rights reserved.</p>
+            <p>Made with ♥ in the metaverse</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/ScrollTrigger.min.js"></script>
+    
+    <script>
+        // Initialize particles.js
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof particlesJS !== 'undefined') {
+                particlesJS('particles-js', {
+                    "particles": {
+                        "number": {
+                            "value": 80,
+                            "density": {
+                                "enable": true,
+                                "value_area": 800
+                            }
+                        },
+                        "color": {
+                            "value": ["#ff00ff", "#00ffff", "#ffff00"]
+                        },
+                        "shape": {
+                            "type": "circle",
+                            "stroke": {
+                                "width": 0,
+                                "color": "#000000"
+                            },
+                            "polygon": {
+                                "nb_sides": 5
+                            }
+                        },
+                        "opacity": {
+                            "value": 0.5,
+                            "random": true,
+                            "anim": {
+                                "enable": true,
+                                "speed": 1,
+                                "opacity_min": 0.1,
+                                "sync": false
+                            }
+                        },
+                        "size": {
+                            "value": 3,
+                            "random": true,
+                            "anim": {
+                                "enable": true,
+                                "speed": 2,
+                                "size_min": 0.1,
+                                "sync": false
+                            }
+                        },
+                        "line_linked": {
+                            "enable": true,
+                            "distance": 150,
+                            "color": "#ff00ff",
+                            "opacity": 0.4,
+                            "width": 1
+                        },
+                        "move": {
+                            "enable": true,
+                            "speed": 1,
+                            "direction": "none",
+                            "random": true,
+                            "straight": false,
+                            "out_mode": "out",
+                            "bounce": false,
+                            "attract": {
+                                "enable": true,
+                                "rotateX": 600,
+                                "rotateY": 1200
+                            }
+                        }
+                    },
+                    "interactivity": {
+                        "detect_on": "canvas",
+                        "events": {
+                            "onhover": {
+                                "enable": true,
+                                "mode": "grab"
+                            },
+                            "onclick": {
+                                "enable": true,
+                                "mode": "push"
+                            },
+                            "resize": true
+                        },
+                        "modes": {
+                            "grab": {
+                                "distance": 140,
+                                "line_linked": {
+                                    "opacity": 1
+                                }
+                            },
+                            "bubble": {
+                                "distance": 400,
+                                "size": 40,
+                                "duration": 2,
+                                "opacity": 8,
+                                "speed": 3
+                            },
+                            "repulse": {
+                                "distance": 200,
+                                "duration": 0.4
+                            },
+                            "push": {
+                                "particles_nb": 4
+                            },
+                            "remove": {
+                                "particles_nb": 2
+                            }
+                        }
+                    },
+                    "retina_detect": true
+                });
+            }
+
+            // Initialize GSAP animations
+            gsap.registerPlugin(ScrollTrigger);
+            
+            gsap.utils.toArray('.article-header, .article-body, .sidebar-card').forEach((element) => {
+                gsap.from(element, {
+                    scrollTrigger: {
+                        trigger: element,
+                        start: "top 80%",
+                        toggleActions: "play none none none"
+                    },
+                    opacity: 0,
+                    y: 50,
+                    duration: 0.8,
+                    ease: "power2.out"
+                });
+            });
+
+            // Filter dropdown functionality
+            $('.filter-button').on('click', function() {
+                $(this).parent().toggleClass('active');
+            });
+
+            $('.filter-option').on('click', function() {
+                const value = $(this).data('value');
+                const text = $(this).text();
+                
+                $('.filter-button span:first').text(text);
+                $('.filter-dropdown').removeClass('active');
+                
+                // Here you would typically make an AJAX call to filter articles
+                // For demonstration, we'll just log the selected category
+                console.log('Selected category:', value);
+                
+                // In a real implementation, you would do something like:
+                // $.ajax({
+                //     url: window.location.pathname,
+                //     data: { category: value },
+                //     success: function(data) {
+                //         // Update the articles grid with the filtered results
+                //     }
+                // });
+            });
+
+            // Close dropdown when clicking outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.filter-dropdown').length) {
+                    $('.filter-dropdown').removeClass('active');
+                }
+            });
+
+            // Search functionality
+            $('.search-input').on('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    const query = $(this).val();
+                    console.log('Searching for:', query);
+                    
+                    // In a real implementation, you would do something like:
+                    // $.ajax({
+                    //     url: window.location.pathname,
+                    //     data: { q: query },
+                    //     success: function(data) {
+                    //         // Update the articles grid with the search results
+                    //     }
+                    // });
+                }
+            });
+
+            // Like button functionality
+            $('.like-button').on('click', function() {
+                const button = $(this);
+                const articleId = '{{ article.id }}'; // This would come from Django template
+                
+                $.ajax({
+                    url: '{% url "like_article" %}',
+                    method: 'POST',
+                    data: {
+                        article_id: articleId,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function(data) {
+                        if (data.liked) {
+                            button.html('<span>👍</span> Like (' + data.likes_count + ')');
+                        } else {
+                            button.html('<span>👍</span> Like (' + data.likes_count + ')');
+                        }
+                    }
+                });
+            });
+
+            // Save button functionality
+            $('.save-button').on('click', function() {
+                const button = $(this);
+                const articleId = '{{ article.id }}';
+                
+                $.ajax({
+                    url: '{% url "save_article" %}',
+                    method: 'POST',
+                    data: {
+                        article_id: articleId,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function(data) {
+                        if (data.saved) {
+                            button.html('<span>🔖</span> Saved');
+                        } else {
+                            button.html('<span>🔖</span> Save');
+                        }
+                    }
+                });
+            });
+
+            // Share button functionality
+            $('.share-button').on('click', function() {
+                if (navigator.share) {
+                    navigator.share({
+                        title: '{{ article.title }}',
+                        text: 'Check out this article from Madison Magazine',
+                        url: window.location.href
+                    }).catch(err => {
+                        console.log('Error sharing:', err);
+                    });
+                } else {
+                    // Fallback for browsers that don't support Web Share API
+                    const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent('Check out this article: ' + '{{ article.title }}')}&url=${encodeURIComponent(window.location.href)}`;
+                    window.open(shareUrl, '_blank');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

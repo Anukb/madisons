@@ -1,11 +1,11 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render
 from django.http import JsonResponse
-from .models import Articles, Category, Notification
+from .models import Article, Category, Notification
 
 @login_required
 def edit_article(request, article_id):
-    article = get_object_or_404(Articles, id=article_id, author=request.user)
+    article = get_object_or_404(Article, id=article_id, author=request.user)
     
     if request.method == 'POST':
         try:

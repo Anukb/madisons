@@ -83,9 +83,8 @@ class Plan(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     duration_days = models.IntegerField()
     features = models.JSONField(default=dict)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)  # Not auto_now_add initially
     updated_at = models.DateTimeField(auto_now=True)
-
     def __str__(self):
         return f"{self.name} (${self.price})"
 
@@ -107,6 +106,14 @@ class UserPlan(models.Model):
             self.end_date = self.start_date + timedelta(days=self.plan.duration_days)
         super().save(*args, **kwargs)
 
+class ReadingHistory(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    article = models.ForeignKey(Articles, on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} read {self.article.title} at {self.timestamp}"
+
 class Transaction(models.Model):
     PAYMENT_STATUS = (
         ('pending', 'Pending'),
@@ -121,9 +128,8 @@ class Transaction(models.Model):
     payment_method = models.CharField(max_length=50)
     payment_id = models.CharField(max_length=100, unique=True)
     status = models.CharField(max_length=20, choices=PAYMENT_STATUS, default='pending')
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
-
     def __str__(self):
         return f"{self.user.username}'s payment for {self.plan.name}"
 
@@ -201,20 +207,6 @@ class Rating(models.Model):
     def __str__(self):
         return f'{self.user.username} rated {self.article.title} - {self.score}'
 
-class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    is_verified = models.BooleanField(default=False)
-    status = models.CharField(max_length=20, choices=[
-        ('active', 'Active'),
-        ('inactive', 'Inactive'),
-        ('pending', 'Pending Verification')
-    ], default='pending')
-    join_date = models.DateTimeField(auto_now_add=True)
-    last_active = models.DateTimeField(auto_now=True)
-    bio = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        return f"{self.user.username}'s Profile"
 
 class Complaint(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -253,18 +245,21 @@ class Event(models.Model):
 
 class UserActivity(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    activity_type = models.CharField(max_length=50)
-    description = models.TextField()
+    action = models.CharField(max_length=100)  # e.g., 'view_article', 'like_article'
     timestamp = models.DateTimeField(auto_now_add=True)
-    ip_address = models.GenericIPAddressField(null=True, blank=True)
-    user_agent = models.TextField(null=True, blank=True)
 
-    class Meta:
-        verbose_name_plural = 'User Activities'
-        ordering = ['-timestamp']
+class ArticleView(models.Model):
+    article = models.ForeignKey('Articles', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    view_time = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"{self.user.username} - {self.activity_type}"
+class Engagement(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    article = models.ForeignKey('Articles', on_delete=models.CASCADE)
+    liked = models.BooleanField(default=False)
+    shared = models.BooleanField(default=False)
+    commented = models.TextField(blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
 class AdminLog(models.Model):
     admin = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -304,4 +299,12 @@ class Report(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+class Announcement(models.Model):
+    title = models.CharField(max_length=255)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
 
