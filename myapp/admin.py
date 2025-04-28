@@ -1,5 +1,11 @@
 from django.contrib import admin
 from .models import Plan, UserPlan, Transaction, Notification
+from .models import Category
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description')
+    search_fields = ('name',)
 
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):

@@ -3,11 +3,11 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, Http404
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils.crypto import get_random_string
-from .models import Category, Articles, UserSearchHistory, UserViewedArticle, UserInteraction, UserPreferences, Profile, Comment, Rating, Notification, Event, Complaint, UserActivity, AdminLog, Report
+from .models import Category, Articles, UserSearchHistory, UserViewedArticle, UserInteraction, UserPreferences, Profile, Comment, Rating, Notification, Event, Complaint, UserActivity, AdminLog, Report, ArticleView, Engagement, Announcement
 import json
 from django.core.files.storage import FileSystemStorage
 from django.core.exceptions import ValidationError
@@ -22,6 +22,7 @@ from django.db.models import Count, Q, Avg, F
 from .recommendation_engine import get_recommendations, collaborative_filtering, content_based_filtering  # Assume this is your ML model
 from django.views.decorators.csrf import csrf_exempt
 from .forms import CommentForm
+from django.contrib.auth.forms import UserCreationForm
 from django.core.cache import cache
 import os
 from transformers import pipeline
@@ -31,6 +32,13 @@ from django.dispatch import receiver
 from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db.models.functions import TruncDate
+from django.utils.dateparse import parse_date
+import logging
+from .models import Articles
+from .models import Event
+from .models import Complaint
+from .models import ReadingHistory
+import re
 
 os.environ['CUDA_VISIBLE_DEVICES'] = ''  # Force CPU usage
 
@@ -116,7 +124,7 @@ def home_view(request):
     articles = Articles.objects.filter(status='published')
     return render(request, 'home.html', {'articles': articles})
 
-def create_welcome_notification(user):
+def welcome_notification(user):
     """Create a welcome notification for new users"""
     return Notification.objects.create(
         user=user,
@@ -134,10 +142,10 @@ def register(request):
         # Create welcome notification
         Notification.objects.create(
             user=user,
-                title="Welcome to Madison!",
-                message="Thank you for joining Madison. Start exploring articles and connecting with other readers!",
-                notification_type='welcome'
-            )
+            title="Welcome to Madison!",
+            message="Thank you for joining Madison. Start exploring articles and connecting with other readers!",
+            notification_type='welcome'
+        )
         return redirect('login')
     else:
         form = UserRegistrationForm()
@@ -152,11 +160,13 @@ def login_view(request):
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
+
         try:
             user = User.objects.get(email=email)
-            if user.check_password(password):
+            user = authenticate(request, username=user.username, password=password)
+            if user is not None:
                 login(request, user)
-                # Create a test notification
+                # Create a test notification - Fix indentation here
                 Notification.objects.create(
                     user=user,
                     title="Welcome Back!",
@@ -165,9 +175,10 @@ def login_view(request):
                 )
                 return redirect('home')
             else:
-                messages.error(request, 'Invalid password.')
+                messages.error(request, 'Invalid email or password.')
         except User.DoesNotExist:
-            messages.error(request, 'No account found with this email.')
+            messages.error(request, 'No user found with that email address.')
+
     return render(request, 'account/login.html')
 
 @login_required
@@ -224,8 +235,9 @@ def admin_login_view(request):
     return render(request, "account/admin_login.html")
 
 @login_required
+@user_passes_test(lambda u: u.is_superuser)
 def admin_dashboard(request):
-    if not request.user.is_staff:
+    if not request.user.is_superuser:
         return redirect('home')
 
     # Get query parameters for filtering
@@ -269,7 +281,6 @@ def admin_dashboard(request):
         'active_events': Event.objects.filter(status='upcoming').count(),
         'total_events': Event.objects.count(),
         'events': events,  # Add events to context
-        
         # Complaint Statistics
         'open_complaints': Complaint.objects.filter(status='pending').count(),
         'total_complaints': Complaint.objects.count(),
@@ -290,11 +301,21 @@ def admin_dashboard(request):
             'articles': Articles.objects.count(),
             'comments': Comment.objects.count(),
             'events': Event.objects.count()
-        }
+        },
+        'categories': Category.objects.all()  # Add categories to context
     }
     
     return render(request, 'account/admin_dashboard.html', context)
+@login_required
+def reading_history_view(request):
+    # Get all reading history for the logged-in user, newest first
+    history_entries = ReadingHistory.objects.select_related('article').filter(user=request.user).order_by('-timestamp')
 
+    context = {
+        'reading_history': history_entries,
+    }
+
+    return render(request, 'account/reading_history.html', context)
 @login_required
 def admin_user_management(request):
     if not request.user.is_superuser:
@@ -365,57 +386,11 @@ def admin_toggle_user_status(request, user_id):
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
 def admin_content_moderation(request):
-    categories = Category.objects.all().order_by('-created_at')
-    total_reports = Report.objects.count()
-    pending_reports = Report.objects.filter(status='pending').count()
-    resolved_today = Report.objects.filter(
-        status='resolved', 
-        updated_at__date=timezone.now().date()
-    ).count()
-    
+    articles = Articles.objects.filter(status='pending')  # Adjust the filter as needed
     context = {
-        'categories': categories,
-        'total_reports': total_reports,
-        'pending_reports': pending_reports,
-        'resolved_today': resolved_today,
+        'articles': articles,
     }
     return render(request, 'admin/content_moderation.html', context)
-
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
-def add_category(request):
-    if request.method == 'POST':
-        try:
-            name = request.POST.get('name')
-            description = request.POST.get('description')
-            
-            if not name:
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Category name is required'
-                }, status=400)
-                
-            category = Category.objects.create(
-                name=name,
-                description=description
-            )
-            
-            return JsonResponse({
-                'success': True,
-                'category': {
-                    'id': category.id,
-                    'name': category.name,
-                    'description': category.description,
-                    'created_at': category.created_at.strftime('%b %d, %Y')
-                }
-            })
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'error': str(e)
-            }, status=500)
-            
-    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
@@ -603,65 +578,39 @@ def admin_event_management(request):
     })
 
 @login_required
+@user_passes_test(lambda u: u.is_superuser)
 def admin_analytics(request):
     if not request.user.is_superuser:
         messages.error(request, "You don't have permission to access this page.")
         return redirect('home')
-    
-    # Get date range from request or default to last 30 days
-    end_date = timezone.now()
-    start_date = end_date - timedelta(days=30)
-    date_range = request.GET.get('range', '30')  # Default to 30 days
-    
-    if date_range == '7':
-        start_date = end_date - timedelta(days=7)
-    elif date_range == '90':
-        start_date = end_date - timedelta(days=90)
-    
+
+    # Gather user statistics
+    total_users = User.objects.count()
+    active_users = User.objects.filter(is_active=True).count()
+    new_users = User.objects.filter(date_joined__gte=timezone.now() - timedelta(days=30)).count()
+
+    # Gather content statistics
+    total_articles = Articles.objects.count()
+    published_articles = Articles.objects.filter(status='published').count()
+    pending_articles = Articles.objects.filter(status='draft').count()
+
+    # Gather engagement statistics
+    total_comments = Comment.objects.count()
+    total_views = UserViewedArticle.objects.count()
+
+    # Prepare context data
     context = {
-        # User Statistics
-        'total_users': User.objects.count(),
-        'active_users': User.objects.filter(is_active=True).count(),
-        'new_users': User.objects.filter(date_joined__gte=start_date).count(),
-        
-        # Content Statistics
-        'total_articles': Articles.objects.count(),
-        'pending_articles': Articles.objects.filter(status='draft').count(),
-        'published_articles': Articles.objects.filter(status='published').count(),
-        
-        # Complaint Statistics
-        'total_complaints': Complaint.objects.count(),
-        'pending_complaints': Complaint.objects.filter(status='pending').count(),
-        'resolved_complaints': Complaint.objects.filter(status='resolved').count(),
-        
-        # User Growth Data
-        'user_growth': User.objects.annotate(
-            date=TruncDate('date_joined')
-        ).values('date').annotate(
-            count=Count('id')
-        ).filter(
-            date_joined__range=(start_date, end_date)
-        ).order_by('date'),
-        
-        # Content Distribution
-        'content_distribution': {
-            'articles': Articles.objects.count(),
-            'comments': Comment.objects.count(),
-            'complaints': Complaint.objects.count()
-        },
-        
-        # Top Content
-        'top_articles': Articles.objects.annotate(
-            view_count=Count('userviewedarticle')
-        ).order_by('-view_count')[:5],
-        
-        # Date Range Context
-        'start_date': start_date,
-        'end_date': end_date,
-        'selected_range': date_range
+        'total_users': total_users,
+        'active_users': active_users,
+        'new_users': new_users,
+        'total_articles': total_articles,
+        'published_articles': published_articles,
+        'pending_articles': pending_articles,
+        'total_comments': total_comments,
+        'total_views': total_views,
     }
-    
-    return render(request, 'admin/analytics.html', context)
+
+    return render(request, 'admin/analytics_dashboard.html', context)
 
 @login_required
 def approve_article(request, article_id):
@@ -692,80 +641,73 @@ def reject_article(request, article_id):
     return redirect('admin_dashboard')
 
 @login_required
-def edit_category(request, category_id):
-    try:
-        category = Category.objects.get(id=category_id)
-    except Category.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Category not found.'})
-
+@user_passes_test(lambda u: u.is_superuser)
+def add_category(request):
     if request.method == 'POST':
-        name = request.POST.get('name')
-        description = request.POST.get('description')
-        
+        name = request.POST.get('name').strip()
+        description = request.POST.get('description', '')
+
         if not name:
-            return JsonResponse({'success': False, 'error': 'Category name is required.'})
-            
-        # Check if another category with same name exists
-        if Category.objects.filter(name__iexact=name).exclude(id=category_id).exists():
-            return JsonResponse({'success': False, 'error': 'A category with this name already exists.'})
-            
+            messages.error(request, 'Category name is required.')
+            return redirect('add_category')
+
+        if Category.objects.filter(name__iexact=name).exists():
+            messages.error(request, 'A category with this name already exists.')
+            return redirect('add_category')
+
         try:
+            category = Category.objects.create(name=name, description=description)
+            messages.success(request, 'Category added successfully!')
+            return redirect('admin_content')  # Redirect to the content moderation page
+        except Exception as e:
+            messages.error(request, 'An error occurred while adding the category. Please try again.')
+            return redirect('add_category')
+
+    return render(request, 'admin/category_add.html')  # Render the form template
+
+logger = logging.getLogger(__name__)
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def edit_category(request, category_id):
+    logger.info(f"Editing category with ID: {category_id}")
+
+    category = get_object_or_404(Category, id=category_id)
+    
+    if request.method == 'POST':
+        name = request.POST.get('name').strip()
+        description = request.POST.get('description', '')
+
+        if not name:
+            messages.error(request, 'Category name is required.')
+            logger.error('Category name is missing.')
+            return JsonResponse({'success': False, 'error': 'Category name is required.'}, status=400)
+
+        try:
+            # Update the category
             category.name = name
             category.description = description
             category.save()
-            return JsonResponse({'success': True})
+            messages.success(request, 'Category updated successfully!')
+            logger.info(f'Category "{name}" updated successfully.')
+            return JsonResponse({'success': True, 'message': 'Category updated successfully!'})
         except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
-            
-    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+            messages.error(request, 'An error occurred while updating the category. Please try again.')
+            logger.error(f'Error updating category: {e}')
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+    return render(request, 'admin/category_edit.html', {'category': category})
 
 @login_required
-def create_article(request):
-    if request.method == 'POST':
-        try:
-            title = request.POST['title']
-            description = request.POST['description']
-            content = request.POST['content']
-            category_id = request.POST['category']
-            status = request.POST.get('status', 'draft')  # Default to draft if not provided
-
-            # Get the category object
-            category = get_object_or_404(Category, id=category_id)
-
-            # Create the article
-            article = Articles.objects.create(
-                title=title,
-                description=description,
-                content=content,
-                category=category,
-                author=request.user,
-                status=status
-            )
-            return redirect('article_dashboard')
-        except Exception as e:
-            # Log the error (you can also use Django's logging framework)
-            print(f"Error creating article: {str(e)}")
-            messages.error(request, 'An error occurred while creating the article. Please try again.')
-            return redirect('add_article')  # Redirect back to the article creation page
-
-    return render(request, 'write_article.html')
-
-@login_required
-def article_dashboard(request):
+@user_passes_test(lambda u: u.is_superuser)
+def delete_category(request, category_id):
     try:
-        # Get user's articles
-        articles = Articles.objects.filter(author=request.user)
-        drafts = articles.filter(status='draft').select_related('category')
-        published_articles = articles.filter(status='published').select_related('category')
-        
-        return render(request, 'article_dashboard.html', {
-            'drafts': drafts,
-            'published_articles': published_articles
-        })
-    except Exception as e:
-        print(f"Error loading dashboard: {str(e)}")
-        messages.error(request, 'An error occurred while loading your articles. Please try again.')
-        return redirect('home')
+        category = get_object_or_404(Category, id=category_id)
+        category.delete()  # Delete the category
+        messages.success(request, 'Category deleted successfully.')
+    except Http404:
+        messages.error(request, 'Category not found.')
+    return redirect('admin_content')  # Redirect to the content moderation page after deletion
 
 def view_articles(request):
     # Only show published articles
@@ -773,12 +715,13 @@ def view_articles(request):
     return render(request, 'view_article.html', {'articles': articles})
 
 @login_required
-def article_detail(request, article_id):
-    article = get_object_or_404(Articles, id=article_id)
+def article_detail(request, article_id, slug):
+    article = get_object_or_404(Articles, id=article_id, slug=slug)
     
     if request.user.is_authenticated:
         # Record that the user has viewed this article
         UserViewedArticle.objects.get_or_create(user=request.user, article=article)
+        ReadingHistory.objects.get_or_create(user=request.user, article=article)
     
     return render(request, 'article_detail.html', {'article': article})
 
@@ -796,261 +739,284 @@ def validate_registration_data(username, email, password, confirm_password, firs
     if User.objects.filter(email=email).exists():
         raise ValidationError('Email already exists.')
 
-def register_view(request):
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def admin_verify_user(request, user_id):
+    # Logic for verifying a user
+    user = User.objects.get(id=user_id)
+    user.is_verified = True
+    user.save()
+    return redirect('admin_user_management')  # Redirect to the user management page
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def admin_get_user_details(request, user_id):
+    user = User.objects.get(id=user_id)
+    # Logic to retrieve user details
+    return JsonResponse({
+        'username': user.username,
+        'email': user.email,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        # Add other fields as necessary
+    })
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def mark_all_notifications_read(request):
     if request.method == 'POST':
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        confirm_password = request.POST.get('confirm_password')
-        first_name = request.POST.get('first_name')
-        last_name = request.POST.get('last_name')
+        Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+        return JsonResponse({'success': True, 'message': 'All notifications marked as read.'})
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
 
-        try:
-            # Call your validation function
-            validate_registration_data(username, email, password, confirm_password, first_name, last_name)
+def search_articles(request):
+    query = request.GET.get('query', '')
+    articles = Articles.objects.filter(Q(title__icontains=query) | Q(category__name__icontains=query) | Q(author__username__icontains=query)).distinct()
+    return render(request, 'search_results.html', {'articles': articles})
 
-            # Create the user
-            user = User.objects.create_user(
-                username=username,
-                email=email,
-                password=password,
-                first_name=first_name,
-                last_name=last_name
-            )
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def test_notification(request):
+        Notification.objects.create(
+            user=request.user,
+            title="Test Notification",
+        message="This is a test notification.",
+        notification_type='test',
+            is_read=False
+        )
+        return JsonResponse({'success': True, 'message': 'Test notification sent.'})
 
-            # Create the corresponding Profile instance
-            Profile.objects.create(user=user)
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def create_announcement(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        message = request.POST.get('message')
+        # Validate fields
+        if not title or not message:
+            messages.error(request, 'Title and message are required.')
+            return redirect('create_announcement')
+        
+        Announcement.objects.create(title=title, message=message)
+        messages.success(request, 'Announcement created successfully!')
+        return redirect('admin_dashboard')
+    
+    return render(request, 'admin/create_announcement.html')
 
-            # Create default UserPreferences instance
-            UserPreferences.objects.create(user=user)
-            
-            # Create welcome notification
-            Notification.objects.create(
-                user=user,
-                title="Welcome to Madison!",
-                message="Welcome to Madison! We're excited to have you join our community. Start exploring articles or write your own to share your knowledge.",
-                notification_type='welcome',
-                is_read=False
-            )
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def test_announcement(request):
+    demo_announcement = {
+        'title': 'Demo Announcement',
+        'message': 'This is a preview of a demo announcement.'
+    }
+    return render(request, 'admin/test_announcement.html', {'announcement': demo_announcement})
 
-            messages.success(request, 'Registration successful. You can now log in.')
-            return redirect('login')
+@login_required
+def generate_summary(request, article_id):
+    article = get_object_or_404(Articles, id=article_id)
+    summary = simple_summarize(article.content)  # Use the simple_summarize function defined earlier
+    return JsonResponse({'summary': summary})
 
-        except ValidationError as e:
-            messages.error(request, str(e))
-            return redirect('register')
+@login_required
+def add_article(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        content = request.POST.get('content')
+        category_id = request.POST.get('category')
+        # Validate fields
+        if not title or not content:
+            messages.error(request, 'Title and content are required.')
+            return redirect('add_article')
+        
+            category = get_object_or_404(Category, id=category_id)
+        article = Articles.objects.create(title=title, content=content, category=category)
+        messages.success(request, 'Article created successfully!')
+        return redirect('article_dashboard')
 
-    return render(request, 'account/register.html')  # Show empty form on GET
+    categories = Category.objects.all()
+    return render(request, 'admin/add_article.html', {'categories': categories})
 
-def check_username(request):
-    username = request.GET.get('username')
-    if username:
-        exists = User.objects.filter(username=username).exists()
-        return JsonResponse({'exists': exists})
-    return JsonResponse({'exists': False})
+@login_required
+def edit_article(request, article_id):
+    article = get_object_or_404(Articles, id=article_id)
+    
+    if request.method == 'POST':
+        article.title = request.POST.get('title', article.title)
+        article.content = request.POST.get('content', article.content)
+        article.category_id = request.POST.get('category', article.category_id)
+        article.save()
+        messages.success(request, 'Article updated successfully!')
+        return redirect('article_dashboard')
+    
+    categories = Category.objects.all()
+    return render(request, 'admin/edit_article.html', {'article': article, 'categories': categories})
+
+@login_required
+def delete_article(request, article_id):
+    article = get_object_or_404(Articles, id=article_id)
+    article.delete()  # Soft delete or mark as inactive
+    messages.success(request, 'Article deleted successfully.')
+    return redirect('article_dashboard')
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def article_dashboard(request):
+    articles = Articles.objects.all()  # Fetch all articles
+    # Implement filtering and pagination logic here
+    return render(request, 'admin/article_dashboard.html', {'articles': articles})
 
 @login_required
 def user_drafts(request):
-    try:
-        # Get all draft articles for the current user
-        drafts = Articles.objects.filter(
-            author=request.user,
-            status='draft'
-        ).select_related('category').order_by('-created_at')  # Most recent drafts first
-        
-        return render(request, 'drafts.html', {
-            'drafts': drafts,
-        })
-    except Exception as e:
-        print(f"Error fetching drafts: {str(e)}")  # Log the error
-        messages.error(request, 'An error occurred while fetching your drafts. Please try again.')
-        return redirect('home')
+    drafts = Articles.objects.filter(author=request.user, status='draft').order_by('-created_at')
+    return render(request, 'admin/user_drafts.html', {'drafts': drafts})
 
-def content_browsing(request):
-    # Only show published articles
-    articles = Articles.objects.filter(status='published')
-    categories = Category.objects.all()
-    return render(request, 'content_browsing.html', {
-        'articles': articles,
-        'categories': categories
-    })
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def analytics_dashboard(request):
+    # Gather analytics data
+    return render(request, 'admin/analytics_dashboard.html', {})
 
-def welcome_notification(request):
-    """Create a welcome notification for new users"""
-    if request.user.is_authenticated:
-        # Create welcome notification
+# Basic profanity filter (you can expand this)
+PROFANITY_LIST = ['badword1', 'badword2']  # Add your profanity words here
+
+def contains_profanity(text):
+    """Check if the text contains any profanity."""
+    return any(bad_word in text.lower() for bad_word in PROFANITY_LIST)
+
+@login_required
+def post_comment(request, article_id):
+    """Authenticated users can post a comment to a specific article."""
+    if request.method == 'POST':
+        comment_text = request.POST.get('comment_text', '').strip()
+
+        # Validate length and profanity
+        if len(comment_text) < 1 or len(comment_text) > 500:
+            return JsonResponse({'success': False, 'error': 'Comment must be between 1 and 500 characters.'}, status=400)
+        if contains_profanity(comment_text):
+            return JsonResponse({'success': False, 'error': 'Your comment contains inappropriate language.'}, status=400)
+
+        article = get_object_or_404(Articles, id=article_id)
+        comment = Comment.objects.create(user=request.user, article=article, body=comment_text)
+        comment.save()
+
+        # Optionally, create a notification for the article author
         Notification.objects.create(
+            user=article.author,
+            title='New Comment',
+            message=f'{request.user.username} commented on your article "{article.title}".',
+            link=f'/article/{article.id}/',
+            is_read=False,
+            created_at=timezone.now()
+        )
+
+        return JsonResponse({'success': True, 'comment': comment.body, 'username': request.user.username, 'created_at': comment.created_at.strftime('%Y-%m-%d %H:%M:%S')})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
+
+@login_required
+def edit_comment(request, comment_id):
+    """Allow users to edit their own comment."""
+    comment = get_object_or_404(Comment, id=comment_id)
+
+    if request.user != comment.user:
+        return JsonResponse({'success': False, 'error': 'You do not have permission to edit this comment.'}, status=403)
+
+    if request.method == 'GET':
+        return JsonResponse({'success': True, 'comment_text': comment.body})
+
+    if request.method == 'POST':
+        new_comment_text = request.POST.get('comment_text', '').strip()
+
+        # Validate length and profanity
+        if len(new_comment_text) < 1 or len(new_comment_text) > 500:
+            return JsonResponse({'success': False, 'error': 'Comment must be between 1 and 500 characters.'}, status=400)
+        if contains_profanity(new_comment_text):
+            return JsonResponse({'success': False, 'error': 'Your comment contains inappropriate language.'}, status=400)
+
+        comment.body = new_comment_text
+        comment.save()
+        return JsonResponse({'success': True, 'comment': comment.body})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
+
+@login_required
+def delete_comment(request, comment_id):
+    """Authenticated users can delete their own comments."""
+    comment = get_object_or_404(Comment, id=comment_id)
+
+    if request.user != comment.user and not request.user.is_superuser:
+        return JsonResponse({'success': False, 'error': 'You do not have permission to delete this comment.'}, status=403)
+
+    comment.delete()
+    return JsonResponse({'success': True, 'message': 'Comment deleted successfully.'})
+
+@login_required
+def rate_article(request, article_id):
+    """View that shows a modal or rating form to the user."""
+    article = get_object_or_404(Articles, id=article_id)
+    current_rating = Rating.objects.filter(user=request.user, article=article).first()
+    return render(request, 'rate_article.html', {'article': article, 'current_rating': current_rating})
+
+@login_required
+def submit_rating(request):
+    """Accept POST via AJAX: { article_id, rating_value }."""
+    if request.method == 'POST':
+        article_id = request.POST.get('article_id')
+        rating_value = request.POST.get('rating_value')
+
+        # Validate input
+        if not rating_value.isdigit() or not (1 <= int(rating_value) <= 5):
+            return JsonResponse({'success': False, 'error': 'Rating must be between 1 and 5.'}, status=400)
+
+        article = get_object_or_404(Articles, id=article_id)
+        rating, created = Rating.objects.update_or_create(
             user=request.user,
-            title="Welcome to Madison",
-            message="Welcome to Madison! We're excited to have you join our community. Start exploring articles and connecting with other readers.",
-            notification_type='welcome'
-        )
-        return JsonResponse({'status': 'success', 'message': 'Welcome notification created'})
-    return JsonResponse({'status': 'error', 'message': 'User not authenticated'}, status=401)
-
-@login_required
-def admin_verify_user(request, user_id):
-    if not request.user.is_superuser:
-        return JsonResponse({'error': 'Unauthorized'}, status=403)
-
-    try:
-        user = User.objects.get(id=user_id)
-        profile = user.userprofile
-        profile.is_verified = True
-        profile.save()
-
-        AdminLog.objects.create(
-            admin=request.user,
-            action='verify_user',
-            target_model='User',
-            target_id=user.id,
-            details=f"Verified user {user.username}"
+            article=article,
+            defaults={'value': rating_value, 'rated_at': timezone.now()}
         )
 
-        return JsonResponse({'success': True})
-    except User.DoesNotExist:
-        return JsonResponse({'error': 'User not found'}, status=404)
+        # Calculate new average rating
+        average_rating = article.ratings.aggregate(Avg('value'))['value__avg'] or 0
+        return JsonResponse({'success': True, 'average_rating': average_rating, 'message': 'Rating submitted successfully.'})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
 
 @login_required
-def admin_get_user_details(request, user_id):
-    if not request.user.is_superuser:
-        return JsonResponse({'error': 'Unauthorized'}, status=403)
-
-    try:
-        user = User.objects.get(id=user_id)
-        profile = user.userprofile
-        recent_activity = UserActivity.objects.filter(user=user).order_by('-timestamp')[:5]
-
-        data = {
-            'id': user.id,
-            'username': user.username,
-            'full_name': user.get_full_name(),
-            'email': user.email,
-            'date_joined': user.date_joined.strftime('%Y-%m-%d %H:%M:%S'),
-            'is_active': user.is_active,
-            'is_verified': profile.is_verified,
-            'last_active': profile.last_active.strftime('%Y-%m-%d %H:%M:%S'),
-            'profile_pic': user.profile.profile_pic.url if hasattr(user, 'profile') else None,
-            'recent_activity': [{
-                'timestamp': activity.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-                'description': activity.description
-            } for activity in recent_activity]
-        }
-        return JsonResponse(data)
-    except User.DoesNotExist:
-        return JsonResponse({'error': 'User not found'}, status=404)
+def notifications_view(request):
+    """Dashboard view showing all notifications for the user."""
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'notifications.html', {'notifications': notifications})
 
 @login_required
-def admin_delete_user(request, user_id):
-    if not request.user.is_superuser:
-        return JsonResponse({'error': 'Unauthorized'}, status=403)
+def get_notifications(request):
+    """Returns a list of latest unread notifications via JSON."""
+    notifications = Notification.objects.filter(user=request.user, is_read=False).order_by('-created_at')[:10]
+    notification_data = [{
+        'title': n.title,
+        'message': n.message,
+        'link': n.link,
+        'created_at': n.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+        'is_read': n.is_read
+    } for n in notifications]
 
-    if request.method != 'DELETE':
-        return JsonResponse({'error': 'Invalid request method'}, status=405)
-
-    try:
-        user = User.objects.get(id=user_id)
-        username = user.username
-        user.delete()
-
-        AdminLog.objects.create(
-            admin=request.user,
-            action='delete_user',
-            target_model='User',
-            target_id=user_id,
-            details=f"Deleted user {username}"
-        )
-
-        return JsonResponse({'success': True})
-    except User.DoesNotExist:
-        return JsonResponse({'error': 'User not found'}, status=404)
+    return JsonResponse({'success': True, 'notifications': notification_data})
 
 @login_required
-def admin_export_users(request):
-    if not request.user.is_superuser:
-        return JsonResponse({'error': 'Unauthorized'}, status=403)
-
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Invalid request method'}, status=405)
-
-    try:
-        format = request.POST.get('format', 'csv')
-        start_date = request.POST.get('start_date')
-        end_date = request.POST.get('end_date')
-        fields = json.loads(request.POST.get('fields', '{}'))
-
-        # Get users based on date range if provided
-        users = User.objects.all()
-        if start_date:
-            users = users.filter(date_joined__gte=start_date)
-        if end_date:
-            users = users.filter(date_joined__lte=end_date)
-
-        # Create the response based on the requested format
-        if format == 'csv':
-            response = HttpResponse(content_type='text/csv')
-            response['Content-Disposition'] = 'attachment; filename="users_export.csv"'
-            writer = csv.writer(response)
-            
-            # Write headers
-            headers = []
-            if fields.get('id'): headers.append('ID')
-            if fields.get('name'): headers.append('Name')
-            if fields.get('email'): headers.append('Email')
-            if fields.get('join_date'): headers.append('Join Date')
-            if fields.get('status'): headers.append('Status')
-            writer.writerow(headers)
-
-            # Write data
-            for user in users:
-                row = []
-                if fields.get('id'): row.append(user.id)
-                if fields.get('name'): row.append(user.get_full_name())
-                if fields.get('email'): row.append(user.email)
-                if fields.get('join_date'): row.append(user.date_joined.strftime('%Y-%m-%d'))
-                if fields.get('status'): row.append('Active' if user.is_active else 'Inactive')
-                writer.writerow(row)
-
-            return response
-        else:
-            return JsonResponse({'error': 'Unsupported export format'}, status=400)
-
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+def mark_notification_read(request, notification_id):
+    """Marks a single notification as read."""
+    notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+    notification.is_read = True
+    notification.save()
+    return JsonResponse({'success': True, 'message': 'Notification marked as read.'})
 
 @login_required
-def admin_complaints(request):
-    if not request.user.is_superuser:
-        messages.error(request, "You don't have permission to access this page.")
-        return redirect('home')
-    
-    # Get query parameters for filtering
-    status_filter = request.GET.get('status', '')
-    
-    # Base queryset with related data
-    complaints = Complaint.objects.select_related('user').all().order_by('-created_at')
-    
-    # Apply filters
-    if status_filter:
-        complaints = complaints.filter(status=status_filter)
-    
-    # Pagination
-    paginator = Paginator(complaints, 20)  # Show 20 complaints per page
-    page = request.GET.get('page')
-    try:
-        complaints = paginator.page(page)
-    except PageNotAnInteger:
-        complaints = paginator.page(1)
-    except EmptyPage:
-        complaints = paginator.page(paginator.num_pages)
-    
-    context = {
-        'complaints': complaints,
-        'total_complaints': Complaint.objects.count(),
-        'pending_complaints': Complaint.objects.filter(status='pending').count(),
-        'resolved_complaints': Complaint.objects.filter(status='resolved').count(),
-        'status_filter': status_filter
-    }
-    
-    return render(request, 'admin/complaints.html', context)
+def recommendations_view(request):
+    recommendations = get_recommendations(request.user)  # Assuming you have a function to get recommendations
+    return render(request, 'recommendations.html', {'recommendations': recommendations})
 
+@login_required
+def subscription_view(request):
+    # Logic for displaying subscription options
+    plans = Plan.objects.all()  # Assuming you have a Plan model
+    return render(request, 'subscription.html', {'plans': plans})

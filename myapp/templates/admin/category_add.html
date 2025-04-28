@@ -1,50 +1,24 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Add New Category - Admin Panel{% endblock %}
+{% block title %}Add New Category{% endblock %}
 
 {% block content %}
 <div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card mt-5">
-                <div class="card-header bg-primary text-white">
-                    <h2 class="mb-0">Add New Category</h2>
-                </div>
-                <div class="card-body">
-                    <!-- Display messages -->
-                    <div id="message-container">
-                        {% if messages %}
-                            {% for message in messages %}
-                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                                    {{ message }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-                    </div>
-                    
-                    <!-- Category Form -->
-                    <form id="category-form" method="POST">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="name" class="form-label">Category Name</label>
-                            <input type="text" class="form-control" id="name" name="name" required>
-                            <div class="invalid-feedback" id="name-error"></div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="description" class="form-label">Description</label>
-                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
-                            <div class="invalid-feedback" id="description-error"></div>
-                        </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">Add Category</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+    <h2>Add New Category</h2>
+    <div id="message-container"></div>
+    <form id="category-form" method="POST" action="{% url 'add_category' %}">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="name">Category Name</label>
+            <input type="text" class="form-control" id="name" name="name" required>
         </div>
-    </div>
+        <div class="mb-3">
+            <label for="description">Description</label>
+            <textarea class="form-control" id="description" name="description"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" id="add-category-button" onclick="this.disabled=true; this.form.submit();">Add Category</button>
+    </form>
 </div>
 {% endblock %}
 

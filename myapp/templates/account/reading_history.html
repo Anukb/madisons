@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-3xl font-bold mb-6 text-pink-500">📚 Your Reading History</h2>
+    
+    {% if reading_history %}
+        <div class="grid gap-4">
+            {% for entry in reading_history %}
+                <div class="p-4 rounded-2xl bg-white/10 backdrop-blur-md shadow-lg border border-pink-400">
+                    <h3 class="text-xl font-semibold text-white">{{ entry.article.title }}</h3>
+                    <p class="text-sm text-pink-200">Category: {{ entry.article.category }}</p>
+                    <p class="text-sm text-pink-300">Read Time: {{ entry.article.read_time }} min</p>
+                    <p class="text-xs text-pink-100">Accessed on: {{ entry.timestamp|date:"M d, Y H:i" }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-pink-300">You haven’t read any articles yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

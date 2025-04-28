@@ -46,6 +46,7 @@
             padding: 0.5em;
             border: 1px solid #ccc;
             border-radius: 4px;
+            box-sizing: border-box;
         }
         button {
             background-color: #5cb85c;
@@ -55,22 +56,40 @@
             border-radius: 4px;
             cursor: pointer;
             width: 100%;
+            font-size: 1em;
+            transition: background-color 0.3s;
         }
         button:hover {
             background-color: #4cae4c;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
         }
         .error-message {
             color: #d9534f;
             margin-top: 0.5em;
             font-size: 0.85em;
+            min-height: 1em;
         }
         .login-link {
             margin-top: 1em;
             display: block;
             color: #007bff;
+            text-decoration: none;
         }
         .login-link:hover {
             text-decoration: underline;
+        }
+        .success-message {
+            color: #5cb85c;
+            margin-bottom: 1em;
+        }
+        .error-list {
+            color: #d9534f;
+            text-align: left;
+            margin-bottom: 1em;
+            padding-left: 1.5em;
         }
     </style>
 </head>
@@ -78,121 +97,227 @@
     <div class="register-container">
         <h2>Create an Account</h2>
 
+        {% if messages %}
+        <div class="error-list">
+            <ul>
+                {% for message in messages %}
+                <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
         <form id="registration-form" method="post" action="{% url 'register' %}">
             {% csrf_token %}
+            
             <div class="input-group">
                 <label for="username">Username:</label>
-                <input type="text" name="username" id="username" required oninput="validateUsername()">
+                <input type="text" name="username" id="username" required>
                 <div id="username-error" class="error-message"></div>
             </div>
+            
             <div class="input-group">
                 <label for="email">Email:</label>
-                <input type="email" name="email" id="email" required oninput="validateEmail()">
+                <input type="email" name="email" id="email" required>
                 <div id="email-error" class="error-message"></div>
             </div>
+            
             <div class="input-group">
                 <label for="first_name">First Name:</label>
-                <input type="text" name="first_name" id="first_name" required oninput="validateName()">
+                <input type="text" name="first_name" id="first_name" required>
                 <div id="first-name-error" class="error-message"></div>
             </div>
+            
             <div class="input-group">
                 <label for="last_name">Last Name:</label>
-                <input type="text" name="last_name" id="last_name" required oninput="validateName()">
+                <input type="text" name="last_name" id="last_name" required>
                 <div id="last-name-error" class="error-message"></div>
             </div>
+            
             <div class="input-group">
                 <label for="password">Password:</label>
-                <input type="password" name="password" id="password" required oninput="validatePassword()">
+                <input type="password" name="password" id="password" required>
                 <div id="password-error" class="error-message"></div>
             </div>
+            
             <div class="input-group">
                 <label for="confirm_password">Confirm Password:</label>
-                <input type="password" name="confirm_password" id="confirm_password" required oninput="validateConfirmPassword()">
+                <input type="password" name="confirm_password" id="confirm_password" required>
                 <div id="confirm-password-error" class="error-message"></div>
             </div>
-            <button type="submit">Register</button>
+            
+            <button type="submit" id="submit-button">Register</button>
         </form>
         
         <a href="{% url 'login' %}" class="login-link">Already have an account? Login here.</a>
     </div>
 
     <script>
+        // DOM Elements
+        const form = document.getElementById('registration-form');
+        const submitButton = document.getElementById('submit-button');
+        const usernameInput = document.getElementById('username');
+        const emailInput = document.getElementById('email');
+        const firstNameInput = document.getElementById('first_name');
+        const lastNameInput = document.getElementById('last_name');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm_password');
+
+        // Error elements
+        const usernameError = document.getElementById('username-error');
+        const emailError = document.getElementById('email-error');
+        const firstNameError = document.getElementById('first-name-error');
+        const lastNameError = document.getElementById('last-name-error');
+        const passwordError = document.getElementById('password-error');
+        const confirmPasswordError = document.getElementById('confirm-password-error');
+
+        // Validation state
+        let isUsernameValid = false;
+        let isEmailValid = false;
+        let isFirstNameValid = false;
+        let isLastNameValid = false;
+        let isPasswordValid = false;
+        let isConfirmPasswordValid = false;
+
+        // Update submit button state
+        function updateSubmitButton() {
+            const isValid = isUsernameValid && isEmailValid && isFirstNameValid && 
+                          isLastNameValid && isPasswordValid && isConfirmPasswordValid;
+            submitButton.disabled = !isValid;
+        }
+
+        // Username validation
         async function validateUsername() {
-            const username = document.getElementById('username').value;
-            const errorDiv = document.getElementById('username-error');
-            errorDiv.textContent = '';
+            const username = usernameInput.value.trim();
+            usernameError.textContent = '';
 
-            if (username) {
-                try {
-                    const response = await fetch(/check_username/?username=${username});
-                    const data = await response.json(); // Parse the JSON response
+            if (username.length < 4) {
+                usernameError.textContent = 'Username must be at least 4 characters';
+                isUsernameValid = false;
+                updateSubmitButton();
+                return;
+            }
 
-                    if (data.exists) { // Check the 'exists' property in the response
-                        errorDiv.textContent = 'Username already exists.';
-                    } else {
-                        errorDiv.textContent = ''; // Clear error if username is available
-                    }
-                } catch (error) {
-                    console.error('Error checking username:', error);
-                    errorDiv.textContent = 'An error occurred while checking the username.';
+            try {
+                const response = await fetch(`{% url 'check_username' %}?username=${encodeURIComponent(username)}`);
+                if (!response.ok) throw new Error('Network error');
+                
+                const data = await response.json();
+                if (data.exists) {
+                    usernameError.textContent = 'Username already exists';
+                    isUsernameValid = false;
+                } else {
+                    isUsernameValid = true;
                 }
+            } catch (error) {
+                console.error('Error checking username:', error);
+                usernameError.textContent = 'Error checking username availability';
+                isUsernameValid = false;
             }
+            
+            updateSubmitButton();
         }
 
+        // Email validation
         function validateEmail() {
-            const email = document.getElementById('email').value;
-            const errorDiv = document.getElementById('email-error');
-            errorDiv.textContent = '';
+            const email = emailInput.value.trim();
+            emailError.textContent = '';
 
-            const emailPattern = /^[a-zA-Z0-9._%+-]+@gmail\.com$/; // Gmail format only
+            const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
             if (!emailPattern.test(email)) {
-                errorDiv.textContent = 'Please enter a valid Gmail address.';
+                emailError.textContent = 'Please enter a valid email address';
+                isEmailValid = false;
+            } else {
+                isEmailValid = true;
             }
+            
+            updateSubmitButton();
         }
 
+        // Name validation
         function validateName() {
-            const firstName = document.getElementById('first_name').value;
-            const lastName = document.getElementById('last_name').value;
-            const firstNameErrorDiv = document.getElementById('first-name-error');
-            const lastNameErrorDiv = document.getElementById('last-name-error');
-
-            firstNameErrorDiv.textContent = '';
-            lastNameErrorDiv.textContent = '';
+            const firstName = firstNameInput.value.trim();
+            const lastName = lastNameInput.value.trim();
+            
+            firstNameError.textContent = '';
+            lastNameError.textContent = '';
 
             if (firstName.length < 2) {
-                firstNameErrorDiv.textContent = 'First name must be at least 2 characters.';
+                firstNameError.textContent = 'First name must be at least 2 characters';
+                isFirstNameValid = false;
+            } else {
+                isFirstNameValid = true;
             }
 
             if (lastName.length < 2) {
-                lastNameErrorDiv.textContent = 'Last name must be at least 2 characters.';
+                lastNameError.textContent = 'Last name must be at least 2 characters';
+                isLastNameValid = false;
+            } else {
+                isLastNameValid = true;
             }
+            
+            updateSubmitButton();
         }
 
+        // Password validation
         function validatePassword() {
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm_password').value;
-            const passwordErrorDiv = document.getElementById('password-error');
-            const confirmPasswordErrorDiv = document.getElementById('confirm-password-error');
-
-            passwordErrorDiv.textContent = '';
+            const password = passwordInput.value;
+            passwordError.textContent = '';
 
             if (password.length < 8) {
-                passwordErrorDiv.textContent = 'Password must be at least 8 characters.';
+                passwordError.textContent = 'Password must be at least 8 characters';
+                isPasswordValid = false;
+            } else {
+                isPasswordValid = true;
             }
+            
+            validateConfirmPassword(); // Also validate confirm password when password changes
+            updateSubmitButton();
         }
 
+        // Confirm password validation
         function validateConfirmPassword() {
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm_password').value;
-            const passwordErrorDiv = document.getElementById('password-error');
-            const confirmPasswordErrorDiv = document.getElementById('confirm-password-error');
-
-            confirmPasswordErrorDiv.textContent = '';
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            confirmPasswordError.textContent = '';
 
             if (password !== confirmPassword) {
-                confirmPasswordErrorDiv.textContent = 'Passwords do not match.';
+                confirmPasswordError.textContent = 'Passwords do not match';
+                isConfirmPasswordValid = false;
+            } else {
+                isConfirmPasswordValid = true;
             }
+            
+            updateSubmitButton();
         }
+
+        // Form submission handler
+        form.addEventListener('submit', function(e) {
+            // Final validation before submission
+            validateUsername();
+            validateEmail();
+            validateName();
+            validatePassword();
+            validateConfirmPassword();
+
+            if (!isUsernameValid || !isEmailValid || !isFirstNameValid || 
+                !isLastNameValid || !isPasswordValid || !isConfirmPasswordValid) {
+                e.preventDefault();
+            }
+        });
+
+        // Event listeners for real-time validation
+        usernameInput.addEventListener('input', validateUsername);
+        usernameInput.addEventListener('blur', validateUsername);
+        emailInput.addEventListener('input', validateEmail);
+        emailInput.addEventListener('blur', validateEmail);
+        firstNameInput.addEventListener('input', validateName);
+        lastNameInput.addEventListener('input', validateName);
+        passwordInput.addEventListener('input', validatePassword);
+        confirmPasswordInput.addEventListener('input', validateConfirmPassword);
+
+        // Initial validation
+        updateSubmitButton();
     </script>
 </body>
 </html>

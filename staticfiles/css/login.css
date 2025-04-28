@@ -1,42 +1,61 @@
 body {
-    font-family: 'Helvetica Neue', sans-serif;
-    background-color: #f3f3f3;
-    color: #333;
+    font-family: 'Arial', sans-serif;
+    background: #f4f4f4;
+    margin: 0;
+    padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    margin: 0;
 }
 
 .login-container {
-    background: white;
-    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.login-box {
+    background: #fff;
+    padding: 30px;
     border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    max-width: 400px;
-    width: 100%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     text-align: center;
+    width: 400px;
 }
 
 h2 {
-    font-size: 24px;
     margin-bottom: 20px;
-    font-family: 'Bodoni MT', serif;
-    color: #222;
+    color: #333;
+}
+
+p {
+    color: #777;
 }
 
 .input-group {
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     text-align: left;
 }
 
-input[type="text"], input[type="password"], input[type="email"] {
+label {
+    display: block;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+input {
     width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
     font-size: 16px;
+}
+
+input:focus {
+    border-color: #3498db;
+    outline: none;
 }
 
 .error-message {
@@ -45,20 +64,18 @@ input[type="text"], input[type="password"], input[type="email"] {
     display: none; /* Hidden by default, shown with JavaScript */
 }
 
-button {
-    background-color: #333;
+.btn {
+    background: #3498db;
     color: white;
-    padding: 10px 20px;
+    padding: 10px;
     border: none;
     border-radius: 5px;
-    cursor: pointer;
     width: 100%;
-    margin-bottom: 10px;
-    font-size: 16px;
+    cursor: pointer;
 }
 
-button:hover {
-    background-color: #555;
+.btn:hover {
+    background: #2980b9;
 }
 
 .social-login p {
@@ -160,11 +177,11 @@ a:hover {
 
 /* Responsive Styles */
 @media (max-width: 768px) {
-    .login-container {
+    .login-box {
         padding: 15px;
     }
 
-    button {
+    .btn {
         font-size: 14px;
     }
 
