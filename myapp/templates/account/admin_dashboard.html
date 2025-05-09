@@ -1,840 +1,2224 @@
-{% extends 'base.html' %}
-{% load static %}
 {% load custom_filters %}
-
-{% block title %}Madison Admin Dashboard{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Madison Admin Dashboard</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
-    .admin-container {
+        :root {
+            --primary-pink: #ff9ff3;
+            --light-pink: #ffd6f4;
+            --dark-pink: #f368e0;
+            --pastel-pink: #ffcce6;
+            --barbie-pink: #ff5eaa;
+            --soft-pink: #ffb8d9;
+            --white: #ffffff;
+            --light-gray: #f8f9fa;
+            --text-dark: #333333;
+            --text-light: #f8f9fa;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: url('https://i.pinimg.com/736x/7c/fe/87/7cfe8739ce41e2ea9292b104c098b9c0.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+        
+        .admin-container {
             display: flex;
             min-height: 100vh;
         }
-
-    .admin-sidebar {
-            width: 250px;
-        background-color: #333;
-        color: white;
-            padding-top: 20px;
-        position: fixed;
-        height: 100vh;
-        left: 0;
-        top: 0;
-    }
-
-    .admin-main {
-        flex: 1;
-        margin-left: 250px;
-        padding: 20px;
-    }
-
-    .nav-link {
-        color: #fff;
-        padding: 10px 20px;
-        transition: background-color 0.3s;
-    }
-
-    .nav-link:hover, .nav-link.active {
-        background-color: #444;
-        color: #fff;
+        
+        /* Sidebar Styles */
+        .admin-sidebar {
+            width: 280px;
+            background: rgba(255, 214, 244, 0.8);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 20px 0;
+            box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            position: fixed;
+            height: 100vh;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            margin-bottom: 20px;
+        }
+        
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 1.8rem;
+            color: var(--barbie-pink);
+            text-align: center;
+            margin: 0;
+            position: relative;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .logo::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, var(--primary-pink), var(--barbie-pink));
+            border-radius: 3px;
+        }
+        
+        .nav-link {
+            color: var(--text-dark);
+            padding: 12px 20px;
+            margin: 5px 10px;
+            border-radius: 10px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
             text-decoration: none;
-    }
-
-    .content-section {
-        display: none;
-    }
-
-    .content-section.active {
-        display: block;
-    }
-
-    .stats-card {
-        padding: 20px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-    }
-
-    .stats-card h3 {
-        margin: 0;
-            font-size: 1.1rem;
-    }
-
-    .stats-card p {
-        margin: 10px 0 0;
-        font-size: 2rem;
-        font-weight: bold;
-    }
-
-    .chart-container {
-        position: relative;
-        height: 300px;  /* Fixed height for charts */
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+            color: var(--barbie-pink);
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255, 94, 170, 0.2);
+            color: var(--text-dark);
+            transform: translateX(5px);
+            box-shadow: 0 4px 8px rgba(255, 94, 170, 0.1);
+        }
+        
+        /* Main Content Styles */
+        .admin-main {
+            flex: 1;
+            margin-left: 280px;
+            padding: 30px;
+            transition: all 0.3s ease;
+        }
+        
+        .content-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Card Styles */
+        .card {
+            background: rgba(255, 255, 255, 0.7);
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            background: rgba(255, 184, 217, 0.7);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 15px 20px;
+            border-radius: 15px 15px 0 0 !important;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+        
+        .card-title {
+            margin-bottom: 0;
+            font-weight: 600;
+            color: var(--barbie-pink);
+        }
+        
+        /* Stats Card */
+        .stats-card {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 5px solid var(--barbie-pink);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stats-card h3 {
+            font-size: 1rem;
+            color: var(--barbie-pink);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .stats-card p {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--dark-pink);
+        }
+        
+        .stats-card small {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        
+        /* Table Styles */
+        .table-responsive {
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        
+        .table {
+            background: rgba(255, 255, 255, 0.8);
+            margin-bottom: 0;
+        }
+        
+        .table th {
+            background: rgba(255, 184, 217, 0.7);
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            color: var(--text-dark);
+        }
+        
+        .table td {
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            vertical-align: middle;
+        }
+        
+        /* Badge Styles */
+        .badge {
+            font-weight: 500;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+        
+        .bg-primary {
+            background-color: var(--primary-pink) !important;
+        }
+        
+        .bg-secondary {
+            background-color: var(--pastel-pink) !important;
+            color: var(--text-dark);
+        }
+        
+        .bg-success {
+            background-color: #2ecc71 !important;
+        }
+        
+        .bg-danger {
+            background-color: #e74c3c !important;
+        }
+        
+        .bg-warning {
+            background-color: #f39c12 !important;
+        }
+        
+        .bg-info {
+            background-color: #3498db !important;
+        }
+        
+        /* Button Styles */
+        .btn {
+            border: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background-color: var(--barbie-pink);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--dark-pink);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(255, 94, 170, 0.3);
+        }
+        
+        .btn-danger {
+            background-color: #e74c3c;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+        }
+        
+        .btn-warning {
+            background-color: #f39c12;
+        }
+        
+        .btn-warning:hover {
+            background-color: #e67e22;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(243, 156, 18, 0.3);
+        }
+        
+        .btn-success {
+            background-color: #2ecc71;
+        }
+        
+        .btn-success:hover {
+            background-color: #27ae60;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(46, 204, 113, 0.3);
+        }
+        
+        .btn-outline-primary {
+            border: 1px solid var(--barbie-pink);
+            color: var(--barbie-pink);
+            background: transparent;
+        }
+        
+        .btn-outline-primary:hover {
+            background: var(--barbie-pink);
+            color: white;
+        }
+        
+        .btn-outline-danger {
+            border: 1px solid #e74c3c;
+            color: #e74c3c;
+            background: transparent;
+        }
+        
+        .btn-outline-danger:hover {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-outline-success {
+            border: 1px solid #2ecc71;
+            color: #2ecc71;
+            background: transparent;
+        }
+        
+        .btn-outline-success:hover {
+            background: #2ecc71;
+            color: white;
+        }
+        
+        .btn-outline-warning {
+            border: 1px solid #f39c12;
+            color: #f39c12;
+            background: transparent;
+        }
+        
+        .btn-outline-warning:hover {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .btn-outline-info {
+            border: 1px solid #3498db;
+            color: #3498db;
+            background: transparent;
+        }
+        
+        .btn-outline-info:hover {
+            background: #3498db;
+            color: white;
+        }
+        
+        /* Form Styles */
+        .form-control, .form-select {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: var(--text-dark);
+            padding: 10px 15px;
+            border-radius: 10px;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: var(--barbie-pink);
+            color: var(--text-dark);
+            box-shadow: 0 0 0 0.25rem rgba(255, 94, 170, 0.25);
+        }
+        
+        .input-group-text {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: var(--barbie-pink);
+            border-radius: 10px;
+        }
+        
+        /* Modal Styles */
+        .modal-content {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .modal-header {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 184, 217, 0.7);
+            border-radius: 15px 15px 0 0 !important;
+        }
+        
+        .modal-footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1100;
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid var(--barbie-pink);
+        }
+        
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
             width: 100%;
-        margin-bottom: 20px;
-    }
-
-    .card {
-        height: 100%;
-        margin-bottom: 20px;
-    }
-
-    .card-body {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .card-title {
-        margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 15px;
+            padding: 15px;
+        }
+        
+        /* Form Validation */
+        .is-invalid {
+            border-color: #e74c3c !important;
+        }
+        
+        .invalid-feedback {
+            color: #e74c3c;
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--barbie-pink);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--dark-pink);
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 992px) {
+            .admin-sidebar {
+                width: 250px;
+            }
+            
+            .admin-main {
+                margin-left: 250px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .admin-container {
+                flex-direction: column;
+            }
+            
+            .admin-sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                padding: 10px 0;
+            }
+            
+            .admin-main {
+                margin-left: 0;
+                padding: 15px;
+            }
+            
+            .nav-link {
+                padding: 10px 15px;
+                margin: 2px 5px;
+            }
+        }
+        
+        /* Animations */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        /* Floating Elements */
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        /* Gradient Text */
+        .gradient-text {
+            background: linear-gradient(to right, var(--primary-pink), var(--barbie-pink));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
         }
     </style>
-{% endblock %}
-
-{% block content %}
-<div class="admin-container">
-    <!-- Sidebar -->
-    <nav class="admin-sidebar">
-        <div class="sidebar-header">
-            <h3 class="text-center mb-4">Madison Admin</h3>
-        </div>
-        <ul class="nav flex-column">
-            <li class="nav-item">
-                <a href="#dashboard" class="nav-link active" data-section="dashboard">
-                    <i class="fas fa-home"></i> Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="#users" class="nav-link" data-section="users">
-                    <i class="fas fa-users"></i> User Management
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="#content" class="nav-link" data-section="content">
-                    <i class="fas fa-newspaper"></i> Content Moderation
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="#analytics" class="nav-link" data-section="analytics">
-                    <i class="fas fa-chart-line"></i> Analytics
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="#complaints" class="nav-link" data-section="complaints">
-                    <i class="fas fa-exclamation-circle"></i> Complaints
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="#events" class="nav-link" data-section="events">
-                    <i class="fas fa-calendar"></i> Events
-                </a>
-            </li>
-            <li class="nav-item mt-4">
-                <form action="{% url 'logout' %}" method="post" class="px-3">
-                        {% csrf_token %}
-                    <button type="submit" class="btn btn-danger w-100">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </button>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <nav class="admin-sidebar">
+            <div class="sidebar-header">
+                <h1 class="logo">MADISON</h1>
+            </div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="#dashboard" class="nav-link active" data-section="dashboard">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#users" class="nav-link" data-section="users">
+                        <i class="fas fa-users"></i> User Management
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#content" class="nav-link" data-section="content">
+                        <i class="fas fa-newspaper"></i> Content Moderation
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#analytics" class="nav-link" data-section="analytics">
+                        <i class="fas fa-chart-line"></i> Analytics
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#complaints" class="nav-link" data-section="complaints">
+                        <i class="fas fa-exclamation-circle"></i> Complaints
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#events" class="nav-link" data-section="events">
+                        <i class="fas fa-calendar"></i> Events
+                    </a>
+                </li>
+                <li class="nav-item mt-4 px-3">
+                    <form action="/logout/" method="post">
+                        <button type="submit" class="btn btn-danger w-100">
+                            <i class="fas fa-sign-out-alt me-2"></i> Logout
+                        </button>
                     </form>
-            </li>
-        </ul>
-    </nav>
+                </li>
+            </ul>
+        </nav>
 
-    <!-- Main Content -->
-    <main class="admin-main">
-        <!-- Dashboard Section -->
-        <section id="dashboard" class="content-section active">
-            <h2 class="mb-4">Dashboard Overview</h2>
-            <div class="stats-cards">
-                <div class="dashboard-stats-container">
-
-                <div class="stats-card">
-                    <h3>Total Articles</h3>
-                    <p>{{ total_articles }}</p>
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section active">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0 gradient-text">Dashboard Overview</h2>
+                    <div class="badge bg-secondary">
+                        <i class="fas fa-sync-alt me-2"></i>Last updated: {{ now|date:"M d, Y H:i" }}
+                    </div>
                 </div>
-                <div class="stats-card">
-                    <h3>Active Users</h3>
-                    <p>{{ active_users }}</p>
-                </div>
-                <div class="stats-card">
-                    <h3>Total Users</h3>
-                    <p>{{ total_users }}</p>
-                    <small>{{ new_users_today }} new today</small>
-                </div>
-                <div class="stats-card">
-                    <h3>Events</h3>
-                    <p>{{ total_events }}</p>
-                    <small>{{ active_events }} active</small>
-                </div>
-                <div class="stats-card">
-                    <h3>Complaints</h3>
-                    <p>{{ total_complaints }}</p>
-                    <small>{{ open_complaints }} open</small>
-                </div>
-            </div>
-        </div>
-            <div class="recent-activities">
-                <h2>Recent Activities</h2>
-                <ul>
-                    {% for activity in recent_activities %}
-                        <li>{{ activity }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-
-            <div class="row mt-4">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Recent Articles</h5>
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Title</th>
-                                            <th>Author</th>
-                                            <th>Status</th>
-                                            <th>Date</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for article in recent_articles %}
-                                        <tr>
-                                            <td>{{ article.title }}</td>
-                                            <td>{{ article.author.username }}</td>
-                                            <td>
-                                                <span class="badge {% if article.status == 'published' %}bg-success{% else %}bg-warning{% endif %}">
-                                                    {{ article.status }}
-                                                </span>
-                                            </td>
-                                            <td>{{ article.created_at|date:"M d, Y" }}</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="stats-card">
+                            <h3><i class="fas fa-file-alt me-2"></i>Total Articles</h3>
+                            <p>{{ total_articles }}</p>
+                            <small>{{ pending_articles }} pending review</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stats-card">
+                            <h3><i class="fas fa-user-check me-2"></i>Active Users</h3>
+                            <p>{{ active_users }}</p>
+                            <small>{{ new_users_today }} new today</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stats-card">
+                            <h3><i class="fas fa-users me-2"></i>Total Users</h3>
+                            <p>{{ total_users }}</p>
+                            <small>{{ blocked_users }} blocked</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stats-card">
+                            <h3><i class="fas fa-calendar-check me-2"></i>Events</h3>
+                            <p>{{ total_events }}</p>
+                            <small>{{ active_events }} upcoming</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stats-card">
+                            <h3><i class="fas fa-exclamation-triangle me-2"></i>Complaints</h3>
+                            <p>{{ total_complaints }}</p>
+                            <small>{{ open_complaints }} open</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stats-card">
+                            <h3><i class="fas fa-comments me-2"></i>Comments</h3>
+                            <p>{{ content_distribution.comments }}</p>
+                            <small>7 reported</small>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Recent Users</h5>
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>User</th>
-                                            <th>Email</th>
-                                            <th>Status</th>
-                                            <th>Joined</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for user in recent_users %}
-                                        <tr>
-                                            <td>{{ user.username }}</td>
-                                            <td>{{ user.email }}</td>
-                                            <td>
-                                                <span class="badge {% if user.is_active %}bg-success{% else %}bg-danger{% endif %}">
-                                                    {{ user.is_active|yesno:"Active,Inactive" }}
-                                                </span>
-                                            </td>
-                                            <td>{{ user.date_joined|date:"M d, Y" }}</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="row mt-4">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">User Growth</h5>
-                            <div class="chart-container">
-                                <canvas id="userGrowthChart"></canvas>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card glass-card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0"><i class="fas fa-newspaper me-2"></i>Recent Articles</h5>
                             </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Content Distribution</h5>
-                            <div class="chart-container">
-                                <canvas id="contentDistributionChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- User Management Section -->
-        <section id="users" class="content-section">
-            <h2 class="mb-4">User Management</h2>
-            <div class="card">
-                <div class="card-body">
-                    <!-- Header with stats -->
-                    <div class="row mb-4">
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">Total Users</h5>
-                                    <h2 class="mb-0">{{ total_users }}</h2>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">Active Users</h5>
-                                    <h2 class="mb-0">{{ active_users }}</h2>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">Inactive Users</h5>
-                                    <h2 class="mb-0">{{ total_users|subtract:active_users }}</h2>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Title</th>
+                                                <th>Author</th>
+                                                <th>Status</th>
+                                                <th>Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for article in recent_articles %}
+                                            <tr>
+                                                <td>{{ article.title|truncatechars:30 }}</td>
+                                                <td>{{ article.author.username }}</td>
+                                                <td>
+                                                    <span class="badge {% if article.status == 'published' %}bg-success{% elif article.status == 'pending' %}bg-warning{% else %}bg-danger{% endif %}">
+                                                        {{ article.status }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ article.created_at|date:"M d, Y" }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
                     </div>
+                    <div class="col-md-6">
+                        <div class="card glass-card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0"><i class="fas fa-users me-2"></i>Recent Users</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>User</th>
+                                                <th>Email</th>
+                                                <th>Status</th>
+                                                <th>Joined</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for user in recent_users %}
+                                            <tr>
+                                                <td>{{ user.username }}</td>
+                                                <td>{{ user.email|truncatechars:20 }}</td>
+                                                <td>
+                                                    <span class="badge {% if user.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                                        {{ user.is_active|yesno:"Active,Blocked" }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                    <!-- Search and filters -->
-                    <div class="card mb-4">
-                        <div class="card-body">
-                            <form method="GET" class="row">
-                                <div class="col-md-6">
-                                    <div class="input-group">
-                                        <span class="input-group-text">
-                                            <i class="fas fa-search"></i>
-                                        </span>
-                                        <input type="text" class="form-control" id="userSearch" name="search"
-                                               placeholder="Search by name, email..." 
-                                               value="{{ search_query }}">
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card glass-card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0"><i class="fas fa-chart-line me-2"></i>User Growth</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="userGrowthChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card glass-card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0"><i class="fas fa-pie-chart me-2"></i>Content Distribution</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="contentDistributionChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- User Management Section -->
+            <section id="users" class="content-section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="gradient-text">User Management</h2>
+                    <div class="badge bg-secondary">
+                        <i class="fas fa-users me-2"></i>{{ total_users }} Total Users
+                    </div>
+                </div>
+                
+                <div class="card glass-card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0"><i class="fas fa-user-cog me-2"></i>Manage Users</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Search and filters -->
+                        <div class="row mb-4">
+                            <div class="col-md-8">
+                                <form method="GET" class="row g-3" id="userFilterForm">
+                                    <div class="col-md-6">
+                                        <div class="input-group">
+                                            <span class="input-group-text">
+                                                <i class="fas fa-search"></i>
+                                            </span>
+                                            <input type="text" class="form-control" name="search" placeholder="Search users..." value="{{ search_query }}">
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <select class="form-select" id="statusFilter" name="status">
-                                        <option value="">All Statuses</option>
-                                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
-                                        <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <button type="submit" class="btn btn-primary w-100">
-                                        <i class="fas fa-filter me-2"></i>Filter
-                                    </button>
-                                </div>
-        </form>
-    </div>
-                    </div>
+                                    <div class="col-md-4">
+                                        <select class="form-select" name="status">
+                                            <option value="">All Statuses</option>
+                                            <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                                            <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="fas fa-filter me-2"></i>Filter
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#exportUsersModal">
+                                    <i class="fas fa-file-export me-2"></i>Export
+                                </button>
+                            </div>
+                        </div>
 
-                    <!-- Users table -->
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Join Date</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for user in all_users %}
+                        <!-- Users table -->
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Profile</th>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Status</th>
+                                        <th>Joined</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in all_users %}
                                     <tr>
                                         <td>{{ user.id }}</td>
                                         <td>
-                                            <div class="d-flex align-items-center">
-                                                {% if user.profile.profile_pic %}
-                                                    <img src="{{ user.profile.profile_pic.url }}" 
-                                                         class="rounded-circle me-2" 
-                                                         width="32" height="32"
-                                                         alt="Profile Picture">
-                                                {% else %}
-                                                    <div class="rounded-circle me-2 bg-secondary text-white d-flex align-items-center justify-content-center" 
-                                                         style="width: 32px; height: 32px;">
-                                                        {{ user.username|make_list|first|upper }}
-                                                    </div>
-                                                {% endif %}
-                                                <div>
-                                                    <div class="fw-bold">
-                                                        {% if user.get_full_name %}
-                                                            {{ user.get_full_name }}
-                                                        {% else %}
-                                                            {{ user.username }}
-                                                        {% endif %}
-                                                    </div>
-                                                    <small class="text-muted">@{{ user.username }}</small>
-                                                </div>
+                                            {% if user.profile.profile_pic %}
+                                                <img src="{{ user.profile.profile_pic.url }}" class="rounded-circle" width="40" height="40" alt="Profile">
+                                            {% else %}
+                                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                    {{ user.username|first|upper }}
                                             </div>
+                                            {% endif %}
                                         </td>
+                                        <td>{{ user.username }}</td>
                                         <td>{{ user.email }}</td>
-                                        <td>{{ user.date_joined|date:"M d, Y" }}</td>
                                         <td>
                                             <span class="badge {% if user.is_active %}bg-success{% else %}bg-danger{% endif %}">
-                                                {{ user.is_active|yesno:"Active,Inactive" }}
+                                                {{ user.is_active|yesno:"Active,Blocked" }}
                                             </span>
                                         </td>
+                                        <td>{{ user.date_joined|date:"M d, Y" }}</td>
                                         <td>
                                             <div class="btn-group">
-                                                <button class="btn btn-sm btn-outline-primary view-user" 
-                                                        data-user-id="{{ user.id }}"
-                                                        title="View Details">
+                                                <button class="btn btn-sm btn-outline-info view-user" data-user-id="{{ user.id }}" data-bs-toggle="tooltip" title="View Details">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
                                                 <button class="btn btn-sm btn-outline-warning toggle-status" 
                                                         data-user-id="{{ user.id }}"
-                                                        data-current-status="{{ user.is_active|yesno:'active,inactive' }}"
+                                                        data-status="{{ user.is_active|yesno:'active,inactive' }}"
+                                                        data-bs-toggle="tooltip" 
                                                         title="Toggle Status">
                                                     <i class="fas {% if user.is_active %}fa-ban{% else %}fa-check{% endif %}"></i>
                                                 </button>
-                                                <button class="btn btn-sm btn-outline-danger delete-user" 
-                                                        data-user-id="{{ user.id }}"
-                                                        title="Delete User">
+                                                <button class="btn btn-sm btn-outline-danger delete-user" data-user-id="{{ user.id }}" data-bs-toggle="tooltip" title="Delete User">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
                                         </td>
                                     </tr>
-                                {% empty %}
+                                    {% empty %}
                                     <tr>
-                                        <td colspan="6" class="text-center">
+                                        <td colspan="7" class="text-center py-4">
                                             <div class="alert alert-info mb-0">
                                                 <i class="fas fa-info-circle me-2"></i>
-                                                No users found. {% if search_query or status_filter %}Try adjusting your search filters.{% endif %}
+                                                No users found.
                                             </div>
                                         </td>
                                     </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if all_users.has_other_pages %}
+                        <nav class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                {% if all_users.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ all_users.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Previous</a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">Previous</span>
+                                </li>
+                                {% endif %}
+                                
+                                {% for i in all_users.paginator.page_range %}
+                                {% if all_users.number == i %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ i }}</span>
+                                </li>
+                                {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ i }}</a>
+                                </li>
+                                {% endif %}
                                 {% endfor %}
-                            </tbody>
-                        </table>
+                                
+                                {% if all_users.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ all_users.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Next</a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">Next</span>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- Content Moderation Section -->
-        <section id="content" class="content-section active">
-            <h2 class="mb-4">Content Moderation</h2>
-            <a href="{% url 'add_category' %}" class="btn btn-primary">Add New Category</a>
-            <div class="card">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Title</th>
-                                    <th>Author</th>
-                                    <th>Category</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            
-        <!-- Categories Section -->
-        <section id="categories" class="content-section">
-            <h2 class="mb-4">Categories Management</h2>
-            <div class="card">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Description</th>
-                                    <th>Created At</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for category in categories %}
-                                <tr>
-                                    <td>{{ category.name }}</td>
-                                    <td>{{ category.description }}</td>
-                                    <td>{{ category.created_at|date:"F j, Y" }}</td>
-                                    <td>
-                                        <a href="{% url 'edit_category' category.id %}" class="btn btn-warning">Edit</a>
-                                        <a href="{% url 'delete_category' category.id %}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this category?')">Delete</a>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="4">No categories found.</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+            <!-- Content Moderation Section -->
+            <section id="content" class="content-section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="gradient-text">Content Moderation</h2>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" id="showPending">
+                            <i class="fas fa-clock me-2"></i>Pending ({{ pending_articles }})
+                        </button>
+                        <button class="btn btn-outline-primary" id="showPublished">
+                            <i class="fas fa-check-circle me-2"></i>Published ({{ published_articles }})
+                        </button>
+                        <button class="btn btn-outline-primary" id="showRejected">
+                            <i class="fas fa-times-circle me-2"></i>Rejected ({{ total_articles|subtract:published_articles|subtract:pending_articles }})
+                        </button>
                     </div>
                 </div>
-            </div>
-        </section>
-
-                            <tbody>
-                                {% for article in articles %}
-                                <tr>
-                                    <td>{{ article.title }}</td>
-                                    <td>{{ article.author.username }}</td>
-                                    <td>{{ article.category.name }}</td>
-                                    <td>{{ article.status }}</td>
-                                    <td>
-                                        <a href="{% url 'admin_get_article' article.id %}" class="btn btn-info">View</a>
-                                        <a href="{% url 'admin_approve_article' article.id %}" class="btn btn-success">Approve</a>
-                                        <a href="{% url 'admin_reject_article' article.id %}" class="btn btn-danger">Reject</a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                
+                <div class="card glass-card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0"><i class="fas fa-file-alt me-2"></i>Articles</h5>
                     </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Analytics Section -->
-        <section id="analytics" class="content">
-            <h2 class="mb-4">Analytics</h2>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Total Users</h5>
-                            <p class="card-text">{{ total_users }}</p>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Author</th>
+                                        <th>Category</th>
+                                        <th>Submitted</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="articlesTableBody">
+                                    {% for article in articles %}
+                                    <tr class="article-row" data-status="{{ article.status }}">
+                                        <td>{{ article.title|truncatechars:40 }}</td>
+                                        <td>{{ article.author.username }}</td>
+                                        <td>{{ article.category.name }}</td>
+                                        <td>{{ article.created_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            <span class="badge {% if article.status == 'published' %}bg-success{% elif article.status == 'pending' %}bg-warning{% else %}bg-danger{% endif %}">
+                                                {{ article.status|title }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm btn-outline-info view-article" data-article-id="{{ article.id }}" data-bs-toggle="tooltip" title="View">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                {% if article.status == 'pending' %}
+                                                <button class="btn btn-sm btn-outline-success approve-article" data-article-id="{{ article.id }}" data-bs-toggle="tooltip" title="Approve">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger reject-article" data-article-id="{{ article.id }}" data-bs-toggle="tooltip" title="Reject">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                                {% endif %}
+                                                <button class="btn btn-sm btn-outline-secondary edit-article" data-article-id="{{ article.id }}" data-bs-toggle="tooltip" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger delete-article" data-article-id="{{ article.id }}" data-bs-toggle="tooltip" title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
+                                            <div class="alert alert-info mb-0">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                No articles found.
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Total Articles</h5>
-                            <p class="card-text">{{ total_articles }}</p>
+            </section>
+
+            <!-- Analytics Section -->
+            <section id="analytics" class="content-section">
+                <h2 class="mb-4 gradient-text">Analytics Dashboard</h2>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card glass-card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0"><i class="fas fa-user-activity me-2"></i>User Activity</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="userActivityChart"></canvas>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            <div class="row mt-4">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Total Views</h5>
-                            <p class="card-text">{{ total_views }}</p>
+                    <div class="col-md-6">
+                        <div class="card glass-card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0"><i class="fas fa-chart-bar me-2"></i>Content Engagement</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="contentEngagementChart"></canvas>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">User Activity</h5>
-                            <div class="chart-container">
-                                <canvas id="userActivityChart"></canvas>
+                    <div class="col-md-6">
+                        <div class="card glass-card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0"><i class="fas fa-star me-2"></i>Top Articles</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Title</th>
+                                                <th>Views</th>
+                                                <th>Likes</th>
+                                                <th>Shares</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for article in top_articles %}
+                                            <tr>
+                                                <td>{{ article.title|truncatechars:30 }}</td>
+                                                <td>{{ article.views }}</td>
+                                                <td>{{ article.likes.count }}</td>
+                                                <td>{{ article.shares }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card glass-card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0"><i class="fas fa-users me-2"></i>User Demographics</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="demographicsChart"></canvas>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="row mt-4">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Content Engagement</h5>
-                            <div class="chart-container">
-                                <canvas id="contentEngagementChart"></canvas>
-                            </div>
+            </section>
+
+            <!-- Complaints Section -->
+            <section id="complaints" class="content-section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="gradient-text">Complaint Management</h2>
+                    <div class="badge bg-secondary">
+                        <i class="fas fa-exclamation-triangle me-2"></i>{{ total_complaints }} Total Complaints
+                    </div>
+                </div>
+                
+                <div class="card glass-card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0"><i class="fas fa-flag me-2"></i>Complaints</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>User</th>
+                                        <th>Subject</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Submitted</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for complaint in complaints %}
+                                    <tr>
+                                        <td>{{ complaint.id }}</td>
+                                        <td>{{ complaint.user.username }}</td>
+                                        <td>{{ complaint.subject|truncatechars:30 }}</td>
+                                        <td>{{ complaint.get_complaint_type_display }}</td>
+                                        <td>
+                                            <span class="badge {% if complaint.status == 'resolved' %}bg-success{% elif complaint.status == 'in_progress' %}bg-primary{% else %}bg-warning{% endif %}">
+                                                {{ complaint.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ complaint.created_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm btn-outline-info view-complaint" data-complaint-id="{{ complaint.id }}" data-bs-toggle="tooltip" title="View">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-success resolve-complaint" data-complaint-id="{{ complaint.id }}" data-bs-toggle="tooltip" title="Resolve">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger delete-complaint" data-complaint-id="{{ complaint.id }}" data-bs-toggle="tooltip" title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4">
+                                            <div class="alert alert-info mb-0">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                No complaints found.
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- Complaints Section -->
-        <section id="complaints" class="content-section">
-            <h2 class="mb-4">Complaints Management</h2>
-            <div class="card">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>User</th>
-                                    <th>Subject</th>
-                                    <th>Status</th>
-                                    <th>Date</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for complaint in complaints %}
-                                <tr>
-                                    <td>{{ complaint.id }}</td>
-                                    <td>{{ complaint.user.username }}</td>
-                                    <td>{{ complaint.subject }}</td>
-                                    <td>
-                                        <span class="badge {% if complaint.status == 'resolved' %}bg-success{% elif complaint.status == 'pending' %}bg-warning{% else %}bg-info{% endif %}">
-                                            {{ complaint.status }}
-                                        </span>
-                                    </td>
-                                    <td>{{ complaint.created_at|date:"M d, Y" }}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-primary view-complaint" data-complaint-id="{{ complaint.id }}">View</button>
-                                        <button class="btn btn-sm btn-success resolve-complaint" data-complaint-id="{{ complaint.id }}">Resolve</button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-    </div>
-        </section>
-
-        <!-- Events Section -->
-        <section id="events" class="content-section">
-            <h2 class="mb-4">Events Management</h2>
-            <div class="card">
-                <div class="card-body">
-                    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addEventModal">
-                        <i class="fas fa-plus"></i> Add New Event
+            <!-- Events Section -->
+            <section id="events" class="content-section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="gradient-text">Event Management</h2>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEventModal">
+                        <i class="fas fa-plus me-2"></i>Add Event
                     </button>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-            <thead>
-                <tr>
-                                    <th>Title</th>
-                                    <th>Date</th>
-                                    <th>Status</th>
-                                    <th>Created By</th>
-                                    <th>Featured</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                                {% for event in events %}
+                </div>
+                
+                <div class="card glass-card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0"><i class="fas fa-calendar-alt me-2"></i>Events</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Date</th>
+                                        <th>Location</th>
+                                        <th>Status</th>
+                                        <th>Featured</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for event in events %}
                                     <tr>
                                         <td>{{ event.title }}</td>
                                         <td>{{ event.date|date:"M d, Y H:i" }}</td>
+                                        <td>{{ event.location|default:"Online" }}</td>
                                         <td>
-                                            <span class="badge {% if event.status == 'upcoming' %}bg-primary
-                                                {% elif event.status == 'ongoing' %}bg-success
-                                                {% elif event.status == 'completed' %}bg-secondary
-                                                {% else %}bg-danger{% endif %}">
-                                                {{ event.status|title }}
+                                            <span class="badge {% if event.status == 'upcoming' %}bg-primary{% elif event.status == 'ongoing' %}bg-success{% else %}bg-secondary{% endif %}">
+                                                {{ event.get_status_display }}
                                             </span>
                                         </td>
-                                        <td>{{ event.created_by.username }}</td>
                                         <td>
                                             {% if event.is_featured %}
-                                                <span class="badge bg-warning">Featured</span>
+                                            <span class="badge bg-warning">Featured</span>
                                             {% endif %}
                                         </td>
                                         <td>
                                             <div class="btn-group">
-                                                <button class="btn btn-sm btn-outline-primary edit-event" 
-                                                        data-event-id="{{ event.id }}"
-                                                        title="Edit Event">
+                                                <button class="btn btn-sm btn-outline-info view-event" data-event-id="{{ event.id }}" data-bs-toggle="tooltip" title="View">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-primary edit-event" data-event-id="{{ event.id }}" data-bs-toggle="tooltip" title="Edit">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                <button class="btn btn-sm btn-outline-danger delete-event" 
-                                                        data-event-id="{{ event.id }}"
-                                                        title="Delete Event">
+                                                <button class="btn btn-sm btn-outline-danger delete-event" data-event-id="{{ event.id }}" data-bs-toggle="tooltip" title="Delete">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
                                         </td>
                                     </tr>
-                                {% empty %}
+                                    {% empty %}
                                     <tr>
-                                        <td colspan="6" class="text-center">
+                                        <td colspan="6" class="text-center py-4">
                                             <div class="alert alert-info mb-0">
                                                 <i class="fas fa-info-circle me-2"></i>
                                                 No events found.
                                             </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-</div>
-
-<!-- Add Event Modal -->
-<div class="modal fade" id="addEventModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add New Event</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="eventForm" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label class="form-label">Event Title</label>
-                        <input type="text" class="form-control" name="title" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-control" name="description" rows="3" required></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Date</label>
-                        <input type="datetime-local" class="form-control" name="date" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Image</label>
-                        <input type="file" class="form-control" name="image" accept="image/*">
-                    </div>
-                    <div class="mb-3">
-                        <div class="form-check">
-                            <input type="checkbox" class="form-check-input" name="is_featured" id="is_featured">
-                            <label class="form-check-label" for="is_featured">Feature this event</label>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Add Event Modal -->
+    <div class="modal fade" id="addEventModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Event</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="eventForm" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Event Title *</label>
+                                    <input type="text" class="form-control" name="title" required>
+                                    <div class="invalid-feedback">Please provide a title for the event.</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Description *</label>
+                                    <textarea class="form-control" name="description" rows="3" required></textarea>
+                                    <div class="invalid-feedback">Please provide a description.</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Date & Time *</label>
+                                    <input type="datetime-local" class="form-control" name="date" required>
+                                    <div class="invalid-feedback">Please select a valid date and time.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Location</label>
+                                    <input type="text" class="form-control" name="location" placeholder="Online">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Featured Image</label>
+                                    <input type="file" class="form-control" name="image" accept="image/*">
+                                    <small class="text-muted">Recommended size: 1200x630 pixels</small>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="is_featured" id="is_featured">
+                                        <label class="form-check-label" for="is_featured">Feature this event</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Event</button>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="saveEvent">Save Event</button>
+        </div>
+    </div>
+
+    <!-- View Article Modal -->
+    <div class="modal fade" id="viewArticleModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Article Preview</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="articleModalBody">
+                    <!-- Content will be loaded via AJAX -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success" id="approveArticleBtn">Approve</button>
+                    <button type="button" class="btn btn-danger" id="rejectArticleBtn">Reject</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-{% endblock %}
+    <!-- Reject Article Modal -->
+    <div class="modal fade" id="rejectArticleModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Reject Article</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="rejectArticleForm">
+                        <div class="mb-3">
+                            <label for="rejectionReason" class="form-label">Reason for rejection *</label>
+                            <textarea class="form-control" id="rejectionReason" rows="3" required></textarea>
+                            <div class="invalid-feedback">Please provide a reason for rejection.</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmRejectArticleBtn">Reject Article</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Navigation
-    const navLinks = document.querySelectorAll('.nav-link');
-    const sections = document.querySelectorAll('.content-section');
+    <!-- View User Modal -->
+    <div class="modal fade" id="viewUserModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">User Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="userModalBody">
+                    <!-- Content will be loaded via AJAX -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-danger" id="toggleUserStatusBtn">Block User</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const targetSection = this.getAttribute('data-section');
-            
-            // Update active states
-            navLinks.forEach(l => l.classList.remove('active'));
-            sections.forEach(s => s.classList.remove('active'));
-            
-            this.classList.add('active');
-            document.getElementById(targetSection).classList.add('active');
-        });
-    });
+    <!-- View Complaint Modal -->
+    <div class="modal fade" id="viewComplaintModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Complaint Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="complaintModalBody">
+                    <!-- Content will be loaded via AJAX -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success" id="resolveComplaintBtn">Resolve</button>
+                    <button type="button" class="btn btn-danger" id="deleteComplaintBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    // Chart configuration options
-    const chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'bottom'
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true
-            }
-        }
-    };
+    <!-- Export Users Modal -->
+    <div class="modal fade" id="exportUsersModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Export Users</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="exportForm">
+                        <div class="mb-3">
+                            <label class="form-label">Export Format</label>
+                            <select class="form-select" name="export_format">
+                                <option value="csv">CSV</option>
+                                <option value="excel">Excel</option>
+                                <option value="json">JSON</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Fields to Include</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="exportUsername" checked>
+                                <label class="form-check-label" for="exportUsername">Username</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="exportEmail" checked>
+                                <label class="form-check-label" for="exportEmail">Email</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="exportStatus" checked>
+                                <label class="form-check-label" for="exportStatus">Status</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="exportJoinDate" checked>
+                                <label class="form-check-label" for="exportJoinDate">Join Date</label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="exportUsersBtn">Export</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    // Initialize charts with real data
-    const userGrowthCtx = document.getElementById('userGrowthChart').getContext('2d');
-    new Chart(userGrowthCtx, {
-        type: 'line',
-        data: {
-            labels: [{% for item in user_growth %}'{{ item.date|date:"M d" }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
-            datasets: [{
-                label: 'New Users',
-                data: [{% for item in user_growth %}{{ item.count }}{% if not forloop.last %}, {% endif %}{% endfor %}],
-                borderColor: '#4f5bd5',
-                tension: 0.4,
-                fill: false
-            }]
-        },
-        options: chartOptions
-    });
+    <!-- Notification Toast -->
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1100">
+        <div id="notificationToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto" id="toastTitle">Notification</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toastMessage">
+                Operation completed successfully.
+            </div>
+        </div>
+    </div>
 
-    const contentDistributionCtx = document.getElementById('contentDistributionChart').getContext('2d');
-    new Chart(contentDistributionCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Articles', 'Comments', 'Events'],
-            datasets: [{
-                data: [
-                    {{ content_distribution.articles }},
-                    {{ content_distribution.comments }},
-                    {{ content_distribution.events }}
-                ],
-                backgroundColor: ['#4f5bd5', '#ff6b6b', '#51cf66']
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            }
-        }
-    });
-});
-
-// Event Management
-document.getElementById('saveEvent').addEventListener('click', function() {
-    const form = document.getElementById('eventForm');
-            const formData = new FormData(form);
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     
-    fetch('/custom-admin/events/', {
-                method: 'POST',
-        body: formData,
-                headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Close modal and show success message
-            const modal = bootstrap.Modal.getInstance(document.getElementById('addEventModal'));
-            modal.hide();
-            showNotification('Event created successfully', 'success');
-            // Reload page to show new event
-            setTimeout(() => location.reload(), 1000);
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Toast
+            const notificationToast = new bootstrap.Toast(document.getElementById('notificationToast'));
+            
+            // Initialize tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+            
+            // Show notification function
+            function showNotification(title, message, type = 'success') {
+                document.getElementById('toastTitle').textContent = title;
+                document.getElementById('toastMessage').textContent = message;
+                
+                // Set toast color based on type
+                const toast = document.getElementById('notificationToast');
+                toast.className = 'toast';
+                
+                if (type === 'success') {
+                    toast.style.borderLeft = '5px solid #2ecc71';
+                } else if (type === 'error') {
+                    toast.style.borderLeft = '5px solid #e74c3c';
+                } else if (type === 'warning') {
+                    toast.style.borderLeft = '5px solid #f39c12';
+                } else {
+                    toast.style.borderLeft = '5px solid var(--barbie-pink)';
+                }
+                
+                notificationToast.show();
+            }
+            
+            // Navigation between sections
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('.content-section');
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetSection = this.getAttribute('data-section');
+                    
+                    // Update active states
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    sections.forEach(s => s.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    document.getElementById(targetSection).classList.add('active');
+                    
+                    // Store the active section in localStorage
+                    localStorage.setItem('activeAdminSection', targetSection);
+                    
+                    // Update charts when switching to analytics
+                    if (targetSection === 'analytics') {
+                        updateCharts();
+                    }
+                });
+            });
+            
+            // Restore active section from localStorage
+            const activeSection = localStorage.getItem('activeAdminSection') || 'dashboard';
+            document.querySelector(`.nav-link[data-section="${activeSection}"]`).click();
+            
+            // Content Moderation - Filter articles
+            const showPending = document.getElementById('showPending');
+            const showPublished = document.getElementById('showPublished');
+            const showRejected = document.getElementById('showRejected');
+            const articleRows = document.querySelectorAll('.article-row');
+            
+            function filterArticles(status) {
+                articleRows.forEach(row => {
+                    if (status === 'all' || row.getAttribute('data-status') === status) {
+                        row.style.display = '';
                     } else {
-            showNotification(data.error || 'Error creating event', 'error');
+                        row.style.display = 'none';
+                    }
+                });
+                
+                // Update button states
+                showPending.className = status === 'pending' ? 'btn btn-primary' : 'btn btn-outline-primary';
+                showPublished.className = status === 'published' ? 'btn btn-primary' : 'btn btn-outline-primary';
+                showRejected.className = status === 'rejected' ? 'btn btn-primary' : 'btn btn-outline-primary';
+            }
+            
+            showPending.addEventListener('click', () => filterArticles('pending'));
+            showPublished.addEventListener('click', () => filterArticles('published'));
+            showRejected.addEventListener('click', () => filterArticles('rejected'));
+            
+            // Article Moderation - View/Approve/Reject
+            document.querySelectorAll('.view-article').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const articleId = this.getAttribute('data-article-id');
+                    const modal = new bootstrap.Modal(document.getElementById('viewArticleModal'));
+                    
+                    // Load article content via AJAX
+                    fetch(`/admin/articles/${articleId}/`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            document.getElementById('articleModalBody').innerHTML = `
+                                <h3>${data.title}</h3>
+                                <p class="text-muted">By ${data.author} | ${data.category} | ${data.created_at}</p>
+                                <hr>
+                                ${data.image_url ? `<img src="${data.image_url}" class="img-fluid rounded mb-3" alt="Article Image">` : ''}
+                                <div>${data.content}</div>
+                            `;
+                            
+                            // Set up approve/reject buttons
+                            document.getElementById('approveArticleBtn').onclick = function() {
+                                approveArticle(articleId);
+                            };
+                            
+                            document.getElementById('rejectArticleBtn').onclick = function() {
+                                const rejectModal = new bootstrap.Modal(document.getElementById('rejectArticleModal'));
+                                document.getElementById('confirmRejectArticleBtn').onclick = function() {
+                                    const reason = document.getElementById('rejectionReason').value;
+                                    if (!reason) {
+                                        document.getElementById('rejectionReason').classList.add('is-invalid');
+                                        return;
+                                    }
+                                    rejectArticle(articleId, reason);
+                                };
+                                rejectModal.show();
+                            };
+                            
+                            modal.show();
+                        })
+                        .catch(error => {
+                            showNotification('Error', 'Failed to load article details', 'danger');
+                            console.error('Error:', error);
+                        });
+                });
+            });
+            
+            function approveArticle(articleId) {
+                fetch(`/admin/articles/${articleId}/approve/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Success', 'Article approved successfully');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showNotification('Error', data.error || 'Failed to approve article', 'danger');
                     }
                 })
                 .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error creating event', 'error');
-    });
-});
-
-function showNotification(message, type) {
-    const notification = document.createElement('div');
-    notification.className = `alert alert-${type} position-fixed top-0 end-0 m-3`;
-    notification.style.zIndex = '9999';
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), 3000);
-        }
+                    showNotification('Error', 'Failed to approve article', 'danger');
+                    console.error('Error:', error);
+                });
+            }
+            
+            function rejectArticle(articleId, reason) {
+                fetch(`/admin/articles/${articleId}/reject/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reason: reason })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Success', 'Article rejected successfully');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showNotification('Error', data.error || 'Failed to reject article', 'danger');
+                    }
+                })
+                .catch(error => {
+                    showNotification('Error', 'Failed to reject article', 'danger');
+                    console.error('Error:', error);
+                });
+            }
+            
+            // Quick approve/reject buttons
+            document.querySelectorAll('.approve-article').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const articleId = this.getAttribute('data-article-id');
+                    if (confirm('Are you sure you want to approve this article?')) {
+                        approveArticle(articleId);
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.reject-article').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const articleId = this.getAttribute('data-article-id');
+                    const rejectModal = new bootstrap.Modal(document.getElementById('rejectArticleModal'));
+                    document.getElementById('confirmRejectArticleBtn').onclick = function() {
+                        const reason = document.getElementById('rejectionReason').value;
+                        if (!reason) {
+                            document.getElementById('rejectionReason').classList.add('is-invalid');
+                            return;
+                        }
+                        rejectArticle(articleId, reason);
+                    };
+                    rejectModal.show();
+                });
+            });
+            
+            // Delete article
+            document.querySelectorAll('.delete-article').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const articleId = this.getAttribute('data-article-id');
+                    if (confirm('Are you sure you want to delete this article? This action cannot be undone.')) {
+                        fetch(`/admin/articles/${articleId}/delete/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': '{{ csrf_token }}',
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                showNotification('Success', 'Article deleted successfully');
+                                setTimeout(() => location.reload(), 1000);
+                            } else {
+                                showNotification('Error', data.error || 'Failed to delete article', 'danger');
+                            }
+                        })
+                        .catch(error => {
+                            showNotification('Error', 'Failed to delete article', 'danger');
+                            console.error('Error:', error);
+                        });
+                    }
+                });
+            });
+            
+            // User Management - View/Block/Delete
+            document.querySelectorAll('.view-user').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const userId = this.getAttribute('data-user-id');
+                    const modal = new bootstrap.Modal(document.getElementById('viewUserModal'));
+                    
+                    // Load user details via AJAX
+                    fetch(`/admin/users/${userId}/`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            document.getElementById('userModalBody').innerHTML = `
+                                <div class="row">
+                                    <div class="col-md-4 text-center">
+                                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center mx-auto" style="width: 150px; height: 150px; font-size: 3rem;">
+                                            ${data.username ? data.username.charAt(0).toUpperCase() : ''}
+                                        </div>
+                                        <h4 class="mt-3">${data.username}</h4>
+                                        <span class="badge ${data.is_active ? 'bg-success' : 'bg-danger'}">
+                                            ${data.is_active ? 'Active' : 'Blocked'}
+                                        </span>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <th>Full Name</th>
+                                                <td>${data.first_name || 'Not provided'} ${data.last_name || ''}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Email</th>
+                                                <td>${data.email}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Joined</th>
+                                                <td>${new Date(data.date_joined).toLocaleDateString()}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Last Login</th>
+                                                <td>${data.last_login ? new Date(data.last_login).toLocaleString() : 'Never'}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Status</th>
+                                                <td>
+                                                    ${data.is_active ? 'Active' : 'Blocked'} | 
+                                                    ${data.is_verified ? 'Verified' : 'Not Verified'}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            // Set up toggle status button
+                            const toggleBtn = document.getElementById('toggleUserStatusBtn');
+                            toggleBtn.textContent = data.is_active ? 'Block User' : 'Unblock User';
+                            toggleBtn.className = data.is_active ? 'btn btn-danger' : 'btn btn-success';
+                            
+                            toggleBtn.onclick = function() {
+                                toggleUserStatus(userId, !data.is_active);
+                            };
+                            
+                            modal.show();
+                        })
+                        .catch(error => {
+                            showNotification('Error', 'Failed to load user details', 'danger');
+                            console.error('Error:', error);
+                        });
+                });
+            });
+            
+            function toggleUserStatus(userId, newStatus) {
+                fetch(`/admin/users/${userId}/toggle-status/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        is_active: newStatus
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Success', `User ${newStatus ? 'unblocked' : 'blocked'} successfully`);
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showNotification('Error', data.error || 'Failed to update user status', 'danger');
+                    }
+                })
+                .catch(error => {
+                    showNotification('Error', 'Failed to update user status', 'danger');
+                    console.error('Error:', error);
+                });
+            }
+            
+            // Quick toggle status buttons
+            document.querySelectorAll('.toggle-status').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const userId = this.getAttribute('data-user-id');
+                    const currentStatus = this.getAttribute('data-status');
+                    const newStatus = currentStatus === 'active' ? false : true;
+                    
+                    if (confirm(`Are you sure you want to ${newStatus ? 'unblock' : 'block'} this user?`)) {
+                        toggleUserStatus(userId, newStatus);
+                    }
+                });
+            });
+            
+            // Delete user
+            document.querySelectorAll('.delete-user').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const userId = this.getAttribute('data-user-id');
+                    if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+                        fetch(`/admin/users/${userId}/delete/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': '{{ csrf_token }}',
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                showNotification('Success', 'User deleted successfully');
+                                setTimeout(() => location.reload(), 1000);
+                            } else {
+                                showNotification('Error', data.error || 'Failed to delete user', 'danger');
+                            }
+                        })
+                        .catch(error => {
+                            showNotification('Error', 'Failed to delete user', 'danger');
+                            console.error('Error:', error);
+                        });
+                    }
+                });
+            });
+            
+            // Export users
+            document.getElementById('exportUsersBtn').addEventListener('click', function() {
+                const format = document.querySelector('select[name="export_format"]').value;
+                const includeUsername = document.getElementById('exportUsername').checked;
+                const includeEmail = document.getElementById('exportEmail').checked;
+                const includeStatus = document.getElementById('exportStatus').checked;
+                const includeJoinDate = document.getElementById('exportJoinDate').checked;
+                
+                // Build query parameters
+                const params = new URLSearchParams();
+                params.append('format', format);
+                if (includeUsername) params.append('fields', 'username');
+                if (includeEmail) params.append('fields', 'email');
+                if (includeStatus) params.append('fields', 'status');
+                if (includeJoinDate) params.append('fields', 'join_date');
+                
+                // Add current filters if any
+                const searchQuery = '{{ search_query }}';
+                const statusFilter = '{{ status_filter }}';
+                
+                if (searchQuery) params.append('search', searchQuery);
+                if (statusFilter) params.append('status', statusFilter);
+                
+                // Trigger download
+                window.location.href = `/admin/users/export/?${params.toString()}`;
+                
+                // Close modal
+                const exportModal = bootstrap.Modal.getInstance(document.getElementById('exportUsersModal'));
+                exportModal.hide();
+                
+                showNotification('Success', 'Export started. Your download will begin shortly.');
+            });
+            
+            // Complaint Management - View/Resolve/Delete
+            document.querySelectorAll('.view-complaint').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const complaintId = this.getAttribute('data-complaint-id');
+                    const modal = new bootstrap.Modal(document.getElementById('viewComplaintModal'));
+                    
+                    // Load complaint details via AJAX
+                    fetch(`/admin/complaints/${complaintId}/`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            document.getElementById('complaintModalBody').innerHTML = `
+                                <h4>${data.subject}</h4>
+                                <p class="text-muted">Submitted by ${data.user} on ${new Date(data.created_at).toLocaleDateString()}</p>
+                                <hr>
+                                <h5>Details:</h5>
+                                <p>${data.description}</p>
+                                <div class="mt-3">
+                                    <strong>Status:</strong>
+                                    <span class="badge ${data.status === 'resolved' ? 'bg-success' : data.status === 'in_progress' ? 'bg-primary' : 'bg-warning'}">
+                                        ${data.status}
+                                    </span>
+                                </div>
+                                ${data.admin_notes ? `<div class="mt-3"><strong>Admin Notes:</strong><p>${data.admin_notes}</p></div>` : ''}
+                            `;
+                            
+                            // Set up action buttons
+                            document.getElementById('resolveComplaintBtn').onclick = function() {
+                                handleComplaint(complaintId, 'resolve');
+                            };
+                            
+                            document.getElementById('deleteComplaintBtn').onclick = function() {
+                                if (confirm('Are you sure you want to delete this complaint?')) {
+                                    handleComplaint(complaintId, 'delete');
+                                }
+                            };
+                            
+                            modal.show();
+                        })
+                        .catch(error => {
+                            showNotification('Error', 'Failed to load complaint details', 'danger');
+                            console.error('Error:', error);
+                        });
+                });
+            });
+            
+            function handleComplaint(complaintId, action) {
+                fetch(`/admin/complaints/${complaintId}/handle/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        notes: 'Handled by admin' // You can customize this
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Success', `Complaint ${action === 'resolve' ? 'resolved' : 'deleted'} successfully`);
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showNotification('Error', data.error || `Failed to ${action} complaint`, 'danger');
+                    }
+                })
+                .catch(error => {
+                    showNotification('Error', `Failed to ${action} complaint`, 'danger');
+                    console.error('Error:', error);
+                });
+            }
+            
+            // Quick resolve/delete buttons
+            document.querySelectorAll('.resolve-complaint').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const complaintId = this.getAttribute('data-complaint-id');
+                    if (confirm('Are you sure you want to mark this complaint as resolved?')) {
+                        handleComplaint(complaintId, 'resolve');
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.delete-complaint').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const complaintId = this.getAttribute('data-complaint-id');
+                    if (confirm('Are you sure you want to delete this complaint?')) {
+                        handleComplaint(complaintId, 'delete');
+                    }
+                });
+            });
+            
+            // Event Form Submission with Validation
+            document.getElementById('eventForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Reset validation
+                const form = e.target;
+                const inputs = form.querySelectorAll('input[required], textarea[required]');
+                let isValid = true;
+                
+                inputs.forEach(input => {
+                    input.classList.remove('is-invalid');
+                    if (!input.value.trim()) {
+                        input.classList.add('is-invalid');
+                        isValid = false;
+                    }
+                });
+                
+                if (!isValid) {
+                    showNotification('Error', 'Please fill in all required fields', 'danger');
+                    return;
+                }
+                
+                // Prepare form data
+                const formData = new FormData(form);
+                
+                // Show loading state
+                const submitBtn = form.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+                
+                // Submit form
+                fetch('/admin/events/', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Success', 'Event created successfully');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showNotification('Error', data.error || 'Error creating event', 'danger');
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Save Event';
+                        
+                        // Show field errors if any
+                        if (data.errors) {
+                            for (const [field, message] of Object.entries(data.errors)) {
+                                const input = form.querySelector(`[name="${field}"]`);
+                                if (input) {
+                                    input.classList.add('is-invalid');
+                                    const feedback = input.nextElementSibling;
+                                    if (feedback && feedback.classList.contains('invalid-feedback')) {
+                                        feedback.textContent = message;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                })
+                .catch(error => {
+                    showNotification('Error', 'Error creating event', 'danger');
+                    console.error('Error:', error);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Save Event';
+                });
+            });
+            
+            // Initialize Charts
+            function updateCharts() {
+                // User Growth Chart
+                const userGrowthCtx = document.getElementById('userGrowthChart').getContext('2d');
+                new Chart(userGrowthCtx, {
+                    type: 'line',
+                    data: {
+                        labels: [{% for item in user_growth %}'{{ item.date|date:"M d" }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+                        datasets: [{
+                            label: 'New Users',
+                            data: [{% for item in user_growth %}{{ item.count }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                            borderColor: 'var(--barbie-pink)',
+                            backgroundColor: 'rgba(255, 94, 170, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    color: 'var(--text-dark)'
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                },
+                                ticks: {
+                                    color: 'var(--text-dark)'
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                },
+                                ticks: {
+                                    color: 'var(--text-dark)'
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // Content Distribution Chart
+                const contentDistributionCtx = document.getElementById('contentDistributionChart').getContext('2d');
+                new Chart(contentDistributionCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Articles', 'Comments', 'Events'],
+                        datasets: [{
+                            data: [
+                                {{ content_distribution.articles }},
+                                {{ content_distribution.comments }},
+                                {{ content_distribution.events }}
+                            ],
+                            backgroundColor: ['var(--barbie-pink)', 'var(--primary-pink)', 'var(--pastel-pink)'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: 'var(--text-dark)'
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // User Activity Chart
+                const userActivityCtx = document.getElementById('userActivityChart').getContext('2d');
+                new Chart(userActivityCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        datasets: [{
+                            label: 'Active Users',
+                            data: [120, 190, 170, 210, 180, 150, 110],
+                            backgroundColor: 'rgba(255, 94, 170, 0.7)',
+                            borderColor: 'var(--barbie-pink)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                },
+                                ticks: {
+                                    color: 'var(--text-dark)'
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                },
+                                ticks: {
+                                    color: 'var(--text-dark)'
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // Demographics Chart
+                const demographicsCtx = document.getElementById('demographicsChart').getContext('2d');
+                new Chart(demographicsCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['18-24', '25-34', '35-44', '45-54', '55+'],
+                        datasets: [{
+                            data: [25, 40, 20, 10, 5],
+                            backgroundColor: ['var(--barbie-pink)', 'var(--primary-pink)', 'var(--pastel-pink)', 'var(--light-pink)', 'rgba(255, 255, 255, 0.7)'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: 'var(--text-dark)'
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // Content Engagement Chart
+                const contentEngagementCtx = document.getElementById('contentEngagementChart').getContext('2d');
+                new Chart(contentEngagementCtx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Views', 'Likes', 'Comments', 'Shares', 'Reading Time'],
+                        datasets: [{
+                            label: 'Engagement',
+                            data: [65, 59, 80, 81, 56],
+                            backgroundColor: 'rgba(255, 94, 170, 0.2)',
+                            borderColor: 'var(--barbie-pink)',
+                            pointBackgroundColor: 'var(--barbie-pink)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'var(--barbie-pink)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                angleLines: {
+                                    color: 'rgba(0, 0, 0, 0.1)'
+                                },
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.1)'
+                                },
+                                pointLabels: {
+                                    color: 'var(--text-dark)'
+                                },
+                                ticks: {
+                                    backdropColor: 'transparent',
+                                    color: 'var(--text-dark)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Initialize charts on page load if on analytics section
+            if (document.getElementById('analytics').classList.contains('active')) {
+                updateCharts();
+            }
+        });
     </script>
-{% endblock %}
+</body>
+</html>

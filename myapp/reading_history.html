@@ -1,0 +1,25 @@
+<!-- reading_history.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Your Reading History</h2>
+<div class="reading-history">
+    {% for session in sessions %}
+    <div class="reading-session">
+        <h4>
+            <a href="{% url 'article_detail' session.article.id session.article.slug %}">
+                {{ session.article.title }}
+            </a>
+        </h4>
+        <div class="reading-stats">
+            <span>Read on {{ session.start_time|date:"M d, Y" }}</span>
+            <span>{{ session.time_spent|floatformat:0 }} seconds</span>
+            <span>{{ session.words_per_minute|floatformat:0 }} WPM</span>
+            <span>{{ session.scroll_depth|floatformat:0 }}% read</span>
+        </div>
+    </div>
+    {% empty %}
+    <p>You haven't read any articles yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}

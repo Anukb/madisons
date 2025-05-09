@@ -1,4 +1,4 @@
-from .models import Articles, UserInteraction, UserViewedArticle, UserEngagement, UserPreferences
+from .models import Article, UserInteraction, UserViewedArticle, UserEngagement, UserPreferences
 from django.db.models import Avg, Count
 
 def get_recommendations(user):
@@ -8,10 +8,10 @@ def get_recommendations(user):
         preferred_categories = preferences.preferred_categories.all()
     except UserPreferences.DoesNotExist:
         # If no preferences exist, return an empty queryset or a default set of articles
-        return Articles.objects.none()  # or return a default set of articles
+        return Article.objects.none()  # or return a default set of articles
 
     # Fetch articles based on preferred categories and published status
-    recommended_articles = Articles.objects.filter(
+    recommended_articles = Article.objects.filter(
         category__in=preferred_categories,
         status="published"
     ).annotate(
@@ -19,7 +19,46 @@ def get_recommendations(user):
     ).order_by('-views_count')[:5]  # Top 5 articles
 
     return recommended_articles
-
+class ContentRecommender:
+    def __init__(self):
+        self.max_speed_diff = 50  # Max allowed WPM difference
+        self.min_confidence = 0.6  # Minimum confidence score
+    
+    def recommend(self, user, articles, profile, reading_sessions, top_n=5):
+        """
+        Recommend articles based on reading speed and preferences
+        """
+        # Get articles with similar reading level
+        suitable_articles = articles.filter(
+            reading_level__lte=profile.preferred_reading_level + 1,
+            status='published'
+        ).exclude(
+            Q(id__in=[s.article.id for s in reading_sessions])
+        )
+        
+        # Score articles based on reading speed match
+        scored_articles = []
+        for article in suitable_articles:
+            # Calculate expected reading time based on user's speed
+            expected_time = (article.word_count / profile.average_reading_speed_wpm) * 60
+            
+            # Score based on how close article is to user's preferred length
+            # (Assuming we have some length preference in profile)
+            length_score = 1 - min(1, abs(article.word_count - 1500) / 3000)
+            
+            # Combine scores
+            total_score = length_score * 0.7
+            
+            # Add category preference if available
+            if hasattr(user, 'userpreferences'):
+                if article.category in user.userpreferences.preferred_categories.all():
+                    total_score += 0.3
+            
+            scored_articles.append((article, total_score))
+        
+        # Sort by score and return top N
+        scored_articles.sort(key=lambda x: x[1], reverse=True)
+        return [article for article, score in scored_articles[:top_n]]
 def collaborative_filtering(user, recent_interactions):
     # Fetch user engagement history
     engaged_articles = UserEngagement.objects.filter(user=user).values_list('article', flat=True)
@@ -30,7 +69,7 @@ def collaborative_filtering(user, recent_interactions):
     print(f"Similar users: {similar_users}")
     
     # Recommend articles that similar users have engaged with, excluding already engaged articles
-    similar_articles = Articles.objects.filter(userengagement__user__in=similar_users).exclude(id__in=engaged_articles)
+    similar_articles = Article.objects.filter(userengagement__user__in=similar_users).exclude(id__in=engaged_articles)
     print(f"Similar articles: {similar_articles}")
     
     return similar_articles[:5]
@@ -49,16 +88,15 @@ def content_based_filtering(user, recent_interactions):
     print(f"Categories: {categories}")
     
     # Fetch tags from previously viewed articles
-    tags = Articles.objects.filter(id__in=viewed_articles).values_list('tags', flat=True)
+    tags = Article.objects.filter(id__in=viewed_articles).values_list('tags', flat=True)
     print(f"Tags: {tags}")
     
     # Recommend articles based on categories and tags, only published articles
-    recommendations = Articles.objects.filter(
+    recommendations = Article.objects.filter(
         category__in=categories,
         status="published"
     ).exclude(id__in=viewed_articles)
     print(f"Recommendations before tag filtering: {recommendations}")
-    
     # Further filter based on tags if available
     if tags:
         recommendations = recommendations.filter(tags__in=tags)
@@ -68,7 +106,7 @@ def content_based_filtering(user, recent_interactions):
 
 def recommend_articles(user):
     user_preferences = user.userpreferences.preferred_categories.all()
-    recommended = Articles.objects.filter(
+    recommended = Article.objects.filter(
         category__in=user_preferences,
         status="published"
     )[:5]

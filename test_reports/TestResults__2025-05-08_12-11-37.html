@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Magazine Website Test Report</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12">
+                <h2 class="text-capitalize">Magazine Website Test Report</h2>
+                <p class='attribute'><strong>Start Time: </strong>2025-05-08 12:11:37</p>
+                <p class='attribute'><strong>Duration: </strong>33.33 s</p>
+                <p class='attribute'><strong>Summary: </strong>Total: 3, Pass: 3</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12 col-sm-10 col-md-10">
+                <table class='table table-hover table-responsive'>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class='success'>
+                            <td class="col-xs-10">test_add_new_article</td>
+                            <td class="col-xs-1">
+                                <span class="label label-success" style="display:block;width:40px;">Pass</span>
+                            </td>
+                            <td class="col-xs-1">
+                                <button class="btn btn-default btn-xs">View</button>
+                            </td>
+                        </tr>
+                        <tr style="display:none;">
+                            <td class="col-xs-9" colspan="3"><p>Article creation test failed: Message: unknown error: net::ERR_CONNECTION_REFUSED
+  (Session info: MicrosoftEdge=136.0.3240.50)
+Stacktrace:
+	GetHandleVerifier [0x00007FF6E7D002E5+25029]
+	(No symbol) [0x00007FF6E7C552F0]
+	Microsoft::Applications::Events::EventProperty::to_string [0x00007FF6E7F7D73A+1947706]
+	(No symbol) [0x00007FF6E7A28A30]
+	(No symbol) [0x00007FF6E7A1CE6F]
+	(No symbol) [0x00007FF6E7A1E4CD]
+	(No symbol) [0x00007FF6E7A1D0D9]
+	(No symbol) [0x00007FF6E7A1CCDC]
+	(No symbol) [0x00007FF6E7A1CA28]
+	(No symbol) [0x00007FF6E7A1AA69]
+	(No symbol) [0x00007FF6E7A1B03C]
+	(No symbol) [0x00007FF6E7A2F06A]
+	(No symbol) [0x00007FF6E7AB6D1E]
+	(No symbol) [0x00007FF6E7A9908A]
+	(No symbol) [0x00007FF6E7A6E15D]
+	(No symbol) [0x00007FF6E7AB6698]
+	(No symbol) [0x00007FF6E7A98DF3]
+	(No symbol) [0x00007FF6E7A6D6A6]
+	(No symbol) [0x00007FF6E7A6CBB3]
+	(No symbol) [0x00007FF6E7A6D4D3]
+	(No symbol) [0x00007FF6E7B6638D]
+	(No symbol) [0x00007FF6E7B73F2F]
+	(No symbol) [0x00007FF6E7B6C91F]
+	Microsoft::Applications::Events::EventProperty::to_string [0x00007FF6E7DE76EA+284650]
+	(No symbol) [0x00007FF6E7C62C81]
+	(No symbol) [0x00007FF6E7C5B724]
+	(No symbol) [0x00007FF6E7C5B873]
+	(No symbol) [0x00007FF6E7C4D4B6]
+	BaseThreadInitThunk [0x00007FFB6165E8D7+23]
+	RtlUserThreadStart [0x00007FFB6383C5DC+44]
+
+</p>
+                            </td>
+                        </tr>
+                        <tr class='success'>
+                            <td class="col-xs-10">test_admin_login</td>
+                            <td class="col-xs-1">
+                                <span class="label label-success" style="display:block;width:40px;">Pass</span>
+                            </td>
+                            <td class="col-xs-1">
+                                <button class="btn btn-default btn-xs">View</button>
+                            </td>
+                        </tr>
+                        <tr style="display:none;">
+                            <td class="col-xs-9" colspan="3"><p>Login test failed: Message: unknown error: net::ERR_CONNECTION_REFUSED
+  (Session info: MicrosoftEdge=136.0.3240.50)
+Stacktrace:
+	GetHandleVerifier [0x00007FF6E7D002E5+25029]
+	(No symbol) [0x00007FF6E7C552F0]
+	Microsoft::Applications::Events::EventProperty::to_string [0x00007FF6E7F7D73A+1947706]
+	(No symbol) [0x00007FF6E7A28A30]
+	(No symbol) [0x00007FF6E7A1CE6F]
+	(No symbol) [0x00007FF6E7A1E4CD]
+	(No symbol) [0x00007FF6E7A1D0D9]
+	(No symbol) [0x00007FF6E7A1CCDC]
+	(No symbol) [0x00007FF6E7A1CA28]
+	(No symbol) [0x00007FF6E7A1AA69]
+	(No symbol) [0x00007FF6E7A1B03C]
+	(No symbol) [0x00007FF6E7A2F06A]
+	(No symbol) [0x00007FF6E7AB6D1E]
+	(No symbol) [0x00007FF6E7A9908A]
+	(No symbol) [0x00007FF6E7A6E15D]
+	(No symbol) [0x00007FF6E7AB6698]
+	(No symbol) [0x00007FF6E7A98DF3]
+	(No symbol) [0x00007FF6E7A6D6A6]
+	(No symbol) [0x00007FF6E7A6CBB3]
+	(No symbol) [0x00007FF6E7A6D4D3]
+	(No symbol) [0x00007FF6E7B6638D]
+	(No symbol) [0x00007FF6E7B73F2F]
+	(No symbol) [0x00007FF6E7B6C91F]
+	Microsoft::Applications::Events::EventProperty::to_string [0x00007FF6E7DE76EA+284650]
+	(No symbol) [0x00007FF6E7C62C81]
+	(No symbol) [0x00007FF6E7C5B724]
+	(No symbol) [0x00007FF6E7C5B873]
+	(No symbol) [0x00007FF6E7C4D4B6]
+	BaseThreadInitThunk [0x00007FFB6165E8D7+23]
+	RtlUserThreadStart [0x00007FFB6383C5DC+44]
+
+</p>
+                            </td>
+                        </tr>
+                        <tr class='success'>
+                            <td class="col-xs-10">test_update_user_profile</td>
+                            <td class="col-xs-1">
+                                <span class="label label-success" style="display:block;width:40px;">Pass</span>
+                            </td>
+                            <td class="col-xs-1">
+                                <button class="btn btn-default btn-xs">View</button>
+                            </td>
+                        </tr>
+                        <tr style="display:none;">
+                            <td class="col-xs-9" colspan="3"><p>Profile update test failed: Message: unknown error: net::ERR_CONNECTION_REFUSED
+  (Session info: MicrosoftEdge=136.0.3240.50)
+Stacktrace:
+	GetHandleVerifier [0x00007FF6E7D002E5+25029]
+	(No symbol) [0x00007FF6E7C552F0]
+	Microsoft::Applications::Events::EventProperty::to_string [0x00007FF6E7F7D73A+1947706]
+	(No symbol) [0x00007FF6E7A28A30]
+	(No symbol) [0x00007FF6E7A1CE6F]
+	(No symbol) [0x00007FF6E7A1E4CD]
+	(No symbol) [0x00007FF6E7A1D0D9]
+	(No symbol) [0x00007FF6E7A1CCDC]
+	(No symbol) [0x00007FF6E7A1CA28]
+	(No symbol) [0x00007FF6E7A1AA69]
+	(No symbol) [0x00007FF6E7A1B03C]
+	(No symbol) [0x00007FF6E7A2F06A]
+	(No symbol) [0x00007FF6E7AB6D1E]
+	(No symbol) [0x00007FF6E7A9908A]
+	(No symbol) [0x00007FF6E7A6E15D]
+	(No symbol) [0x00007FF6E7AB6698]
+	(No symbol) [0x00007FF6E7A98DF3]
+	(No symbol) [0x00007FF6E7A6D6A6]
+	(No symbol) [0x00007FF6E7A6CBB3]
+	(No symbol) [0x00007FF6E7A6D4D3]
+	(No symbol) [0x00007FF6E7B6638D]
+	(No symbol) [0x00007FF6E7B73F2F]
+	(No symbol) [0x00007FF6E7B6C91F]
+	Microsoft::Applications::Events::EventProperty::to_string [0x00007FF6E7DE76EA+284650]
+	(No symbol) [0x00007FF6E7C62C81]
+	(No symbol) [0x00007FF6E7C5B724]
+	(No symbol) [0x00007FF6E7C5B873]
+	(No symbol) [0x00007FF6E7C4D4B6]
+	BaseThreadInitThunk [0x00007FFB6165E8D7+23]
+	RtlUserThreadStart [0x00007FFB6383C5DC+44]
+
+</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">
+                                Total: 3, Pass: 3 -- Duration: 33.33 s
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $('td').on('click', '.btn', function(e){
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                var $this = $(this);
+                var $nextRow = $this.closest('tr').next('tr');
+                $nextRow.slideToggle("fast");
+                $this.text(function(i, text){
+                    if (text === 'View') {
+                        return 'Hide';
+                    } else {
+                        return 'View';
+                    };
+                });
+            });
+        });
+    </script>
+</body>
+</html

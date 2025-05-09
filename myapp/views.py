@@ -11,8 +11,8 @@ from .models import Category, Articles, UserSearchHistory, UserViewedArticle, Us
 import json
 from django.core.files.storage import FileSystemStorage
 from django.core.exceptions import ValidationError
-from .models import Plan, UserPlan, Transaction
-from django.urls import reverse
+from .models import Plan, UserPlan, Transaction, Subscription
+from django.urls import reverse, reverse_lazy
 from django.utils.timezone import now
 import uuid
 from datetime import timedelta
@@ -39,6 +39,19 @@ from .models import Event
 from .models import Complaint
 from .models import ReadingHistory
 import re
+from django.utils.text import slugify
+from django.db import transaction as db_transaction # Avoid naming conflict
+from .decorators import subscription_required # Import the decorator
+import bleach # For content sanitization (pip install bleach)
+from datetime import datetime
+import stripe # Add stripe import
+from django.views.decorators.csrf import csrf_exempt # For webhook
+from django.db import transaction as db_transaction # For atomic operations
+from django.urls import reverse_lazy
+import razorpay
+import time
+from .models import ReadingSession, UserReadingProfile
+from .content_recommender import ContentRecommender
 
 os.environ['CUDA_VISIBLE_DEVICES'] = ''  # Force CPU usage
 
@@ -66,10 +79,19 @@ def edit_profile_view(request):
     profile = request.user.profile  # Assuming Profile is linked to User via a OneToOneField
 
     if request.method == 'POST':
+        # Retrieve and validate User fields
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()  # Ensure email is retrieved and stripped
+
+        if not email:
+            messages.error(request, 'Email is required.')  # Add an error message if email is empty
+            return render(request, 'account/profile.html', {'profile': profile})  # Render profile with error
+
         # Update User fields
-        request.user.first_name = request.POST.get('first_name')
-        request.user.last_name = request.POST.get('last_name')
-        request.user.email = request.POST.get('email')
+        request.user.first_name = first_name
+        request.user.last_name = last_name
+        request.user.email = email  # Now safe to assign
 
         # Update Profile fields
         profile.user_type = request.POST.get('user_type')
@@ -80,49 +102,70 @@ def edit_profile_view(request):
         profile.save()
 
         messages.success(request, 'Your profile has been updated!')
-        return redirect('profile')  # Redirect to the profile page
+        
+        # Render the profile page with updated data
+        return render(request, 'account/profile.html', {'profile': profile})
 
     return render(request, 'account/edit_profile.html', {'profile': profile})
-
 @login_required
 def profile_view(request):
     user_preferences, created = UserPreferences.objects.get_or_create(user=request.user)
-
-    # Ensure the profile exists
     profile, created = Profile.objects.get_or_create(user=request.user)
+    submissions = Articles.objects.filter(author=request.user).exclude(status='published').order_by('-created_at')
 
     if request.method == 'POST':
-        user = request.user
-        user.first_name = request.POST.get('name').split()[0]
-        user.last_name = request.POST.get('name').split()[1]
-        user.bio = request.POST.get('bio')
+        try:
+            # Update user fields
+            request.user.first_name = request.POST.get('first_name', '')
+            request.user.last_name = request.POST.get('last_name', '')
+            request.user.save()
 
-        # Handle profile picture upload
-        if request.FILES.get('profile_pic'):
-            profile.profile_pic = request.FILES['profile_pic']  # Save to Profile model
+            # Update profile picture
+            if 'profile_pic' in request.FILES:
+                profile.profile_pic = request.FILES['profile_pic']
+                profile.save()
 
-        # Handle interests
-        interests = request.POST.getlist('interests')
-        user_preferences.preferred_categories.set(interests)
+            # Update preferences
+            category_ids = request.POST.getlist('interests')
+            user_preferences.preferred_categories.set(category_ids)
 
-        user.save()
-        user_preferences.save()
-        profile.save()  # Save the profile
-        
-        messages.success(request, 'Profile updated successfully!')
-        return redirect('profile')
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('profile')
+
+        except Exception as e:
+            messages.error(request, f'Error updating profile: {str(e)}')
 
     return render(request, 'profile.html', {
         'user': request.user,
         'categories': Category.objects.all(),
         'user_preferences': user_preferences,
-        'profile': profile  # Pass the profile to the template
+        'profile': profile
     })
-
 def home_view(request):
     # Only fetch published articles
-    articles = Articles.objects.filter(status='published')
+    articles = Articles.objects.all().order_by('-created_at')[:6]
     return render(request, 'home.html', {'articles': articles})
+    recommendations = []
+    if request.user.is_authenticated:
+        try:
+            profile = UserReadingProfile.objects.get(user=request.user)
+            sessions = ReadingSession.objects.filter(user=request.user)
+            recommender = ContentRecommender()
+            recommendations = recommender.recommend(
+                request.user, 
+                Article.objects.all(), 
+                profile, 
+                sessions,
+                top_n=3
+            )
+        except UserReadingProfile.DoesNotExist:
+            pass
+    
+    context = {
+        'articles': articles,
+        'recommendations': recommendations,
+    }
+    return render(request, 'home.html', context)
 
 def welcome_notification(user):
     """Create a welcome notification for new users"""
@@ -134,22 +177,126 @@ def welcome_notification(user):
         is_read=False
     )
 
+# --- Define Validation Constants ---
+TITLE_REGEX = r"^[A-Za-z\s\-]+$" # Allow letters, spaces, hyphens
+MAX_TITLE_LENGTH = 100
+DESCRIPTION_REGEX = r"^[A-Za-z0-9\s.,!?'\"()-]+$" # Allow letters, numbers, basic punctuation
+MAX_DESCRIPTION_LENGTH = 250
+ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp']
+MAX_IMAGE_SIZE_MB = 2
+MAX_UPLOAD_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024
+ALLOWED_PDF_EXTENSIONS = ['pdf']
+MAX_PDF_SIZE_MB = 5 # Example
+MAX_PDF_SIZE_BYTES = MAX_PDF_SIZE_MB * 1024 * 1024
+
+# --- Helper Validation Functions ---
+def validate_file_size(value, max_size_bytes):
+    if value.size > max_size_bytes:
+        raise ValidationError(f"File size cannot exceed {max_size_bytes / 1024 / 1024:.1f}MB.")
+
+def validate_schedule_time(dt_value):
+     if dt_value and dt_value <= timezone.now():
+          raise ValidationError("Scheduled publish time cannot be in the past.")
+
 def register(request):
+    context = {}
+    errors = {}  # Initialize errors here
+
+    # Initialize variables to avoid UnboundLocalError
+    username = ''
+    email = ''
+    password1 = ''
+    password2 = ''
+    full_name = ''
+    country = ''
+    bio = ''
+    profile_picture = None
+
     if request.method == 'POST':
-        form = UserRegistrationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-        # Create welcome notification
+        # User fields
+        username = request.POST.get('username', '').strip()
+        email = request.POST.get('email', '').strip()
+        password1 = request.POST.get('password1')
+        password2 = request.POST.get('password2')
+
+        # Profile fields
+        full_name = request.POST.get('full_name', '').strip()
+        country = request.POST.get('country', '').strip()
+        bio = request.POST.get('bio', '').strip()
+        profile_picture = request.FILES.get('profile_picture')
+
+        # Validation
+        is_valid = True
+        errors = {}
+
+        if not username:
+            errors['username'] = "Username is required."
+            is_valid = False
+        elif User.objects.filter(username=username).exists():
+            errors['username'] = "Username is already taken."
+            is_valid = False
+
+        if not email:
+            errors['email'] = "Email is required."
+            is_valid = False
+        else:
+            try:
+                validate_email(email)
+                if User.objects.filter(email=email).exists():
+                    errors['email'] = "Email is already registered."
+                    is_valid = False
+            except ValidationError:
+                errors['email'] = "Invalid email format."
+                is_valid = False
+
+        if not password1 or not password2:
+            errors['password'] = "Both passwords are required."
+            is_valid = False
+        elif password1 != password2:
+            errors['password'] = "Passwords do not match."
+            is_valid = False
+        elif len(password1) < 8:
+            errors['password'] = "Password must be at least 8 characters."
+            is_valid = False
+
+        if not full_name:
+            errors['full_name'] = "Full name is required."
+            is_valid = False
+
+        if not country:
+            errors['country'] = "Country is required."
+            is_valid = False
+
+        if is_valid:
+            user = User.objects.create_user(username=username, email=email, password=password1)
+            profile = UserProfile.objects.create(
+                user=user,
+                full_name=full_name,
+                country=country,
+                bio=bio,
+                profile_picture=profile_picture
+            )
+
         Notification.objects.create(
             user=user,
             title="Welcome to Madison!",
             message="Thank you for joining Madison. Start exploring articles and connecting with other readers!",
             notification_type='welcome'
         )
+
+        messages.success(request, f"Welcome, {full_name}! Your Madison profile is ready.")
         return redirect('login')
-    else:
-        form = UserRegistrationForm()
-    return render(request, 'registration/register.html', {'form': form})
+
+        context['errors'] = errors
+        context['input'] = {
+                'username': username,
+                'email': email,
+                'full_name': full_name,
+                'country': country,
+                'bio': bio
+            }
+
+    return render(request, 'account/register.html', context)
 
 def check_username(request):
     username = request.GET.get('username')
@@ -263,10 +410,15 @@ def admin_dashboard(request):
         users = users.filter(is_active=(status_filter == 'active'))
 
     # Get real-time statistics for dashboard
+    total_users = User.objects.exclude(is_superuser=True).count()
+    active_users = User.objects.exclude(is_superuser=True).filter(is_active=True).count()
+    blocked_users = total_users - active_users  # Perform the subtraction here
+    
     context = {
         # User Statistics
-        'total_users': User.objects.exclude(is_superuser=True).count(),
-        'active_users': User.objects.exclude(is_superuser=True).filter(is_active=True).count(),
+        'total_users': total_users,
+        'active_users': active_users,
+        'blocked_users': blocked_users,  # Pass the result to the template
         'new_users_today': User.objects.exclude(is_superuser=True).filter(date_joined__date=timezone.now().date()).count(),
         'all_users': users,  # Add users to context
         'search_query': search_query,
@@ -306,16 +458,12 @@ def admin_dashboard(request):
     }
     
     return render(request, 'account/admin_dashboard.html', context)
+# views.py
+
 @login_required
-def reading_history_view(request):
-    # Get all reading history for the logged-in user, newest first
-    history_entries = ReadingHistory.objects.select_related('article').filter(user=request.user).order_by('-timestamp')
-
-    context = {
-        'reading_history': history_entries,
-    }
-
-    return render(request, 'account/reading_history.html', context)
+def reading_history(request):
+    sessions = ReadingSession.objects.filter(user=request.user).select_related('article').order_by('-start_time')
+    return render(request, 'reading_history.html', {'sessions': sessions})
 @login_required
 def admin_user_management(request):
     if not request.user.is_superuser:
@@ -583,12 +731,12 @@ def admin_analytics(request):
     if not request.user.is_superuser:
         messages.error(request, "You don't have permission to access this page.")
         return redirect('home')
-
+    
     # Gather user statistics
     total_users = User.objects.count()
     active_users = User.objects.filter(is_active=True).count()
     new_users = User.objects.filter(date_joined__gte=timezone.now() - timedelta(days=30)).count()
-
+        
     # Gather content statistics
     total_articles = Articles.objects.count()
     published_articles = Articles.objects.filter(status='published').count()
@@ -609,7 +757,7 @@ def admin_analytics(request):
         'total_comments': total_comments,
         'total_views': total_views,
     }
-
+    
     return render(request, 'admin/analytics_dashboard.html', context)
 
 @login_required
@@ -665,7 +813,6 @@ def add_category(request):
 
     return render(request, 'admin/category_add.html')  # Render the form template
 
-logger = logging.getLogger(__name__)
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
@@ -684,7 +831,6 @@ def edit_category(request, category_id):
             return JsonResponse({'success': False, 'error': 'Category name is required.'}, status=400)
 
         try:
-            # Update the category
             category.name = name
             category.description = description
             category.save()
@@ -710,21 +856,60 @@ def delete_category(request, category_id):
     return redirect('admin_content')  # Redirect to the content moderation page after deletion
 
 def view_articles(request):
-    # Only show published articles
-    articles = Articles.objects.filter(status='published')
-    return render(request, 'view_article.html', {'articles': articles})
+    articles = Articles.objects.all().order_by('-created_at')
+    
+    # Ensure all articles have slugs (optional, might be better in save method)
+    for article in articles:
+        if not article.slug:
+            article.slug = slugify(article.title)
+            article.save()
+    
+    categories = Category.objects.all() # Keep categories if needed by view_article.html
+    context = {
+        'articles': articles,
+        'categories': categories,
+        'year': timezone.now().year # Add year if needed by the template
+    }
+    return render(request, 'view_article.html', context) # Changed template name
 
 @login_required
-def article_detail(request, article_id, slug):
-    article = get_object_or_404(Articles, id=article_id, slug=slug)
+@subscription_required(required_plan_names=['Premium', 'Pro'])
+def article_detail(request, article_id):
+    article = Article.objects.get(id=article_id)
     
-    if request.user.is_authenticated:
-        # Record that the user has viewed this article
-        UserViewedArticle.objects.get_or_create(user=request.user, article=article)
-        ReadingHistory.objects.get_or_create(user=request.user, article=article)
+    # Start tracking reading session
+    session = ReadingSession.objects.create(
+        user=request.user,
+        article=article,
+        start_time=timezone.now()
+    )
     
-    return render(request, 'article_detail.html', {'article': article})
+    if request.method == 'POST':
+        # Update reading session when user leaves the article
+        session.end_time = timezone.now()
+        session.scroll_depth = float(request.POST.get('scroll_depth', 0))
+        session.time_spent = (session.end_time - session.start_time).total_seconds()
+        session.save()
+        
+        # Update user reading profile
+        profile, created = UserReadingProfile.objects.get_or_create(user=request.user)
+        return render(request, 'thanks.html')
+    
+    return render(request, 'article_detail.html', {'article': article, 'session_id': session.id})
 
+def get_recommendations(request):
+    articles = Article.objects.all()
+    profile = UserReadingProfile.objects.get(user=request.user)
+    sessions = ReadingSession.objects.filter(user=request.user)
+    
+    recommendations = recommender.recommend(
+        request.user, 
+        articles, 
+        profile, 
+        sessions
+    )
+    
+    return render(request, 'recommendations.html', {'recommendations': recommendations})
 def validate_registration_data(username, email, password, confirm_password, first_name, last_name):
     """Validate user registration data."""
     if not first_name.isalpha() or not last_name.isalpha():
@@ -770,21 +955,43 @@ def mark_all_notifications_read(request):
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 def search_articles(request):
-    query = request.GET.get('query', '')
-    articles = Articles.objects.filter(Q(title__icontains=query) | Q(category__name__icontains=query) | Q(author__username__icontains=query)).distinct()
-    return render(request, 'search_results.html', {'articles': articles})
+    query = request.GET.get('query', '').strip()
+    articles = []
+    
+    if query:
+        articles = Articles.objects.filter(
+            Q(title__icontains=query) |
+            Q(content__icontains=query) |
+            Q(category__name__icontains=query) | 
+            Q(author__username__icontains=query)
+        ).filter(status='published').distinct()
+        
+        # Log the search if user is authenticated
+        if request.user.is_authenticated:
+            UserSearchHistory.objects.create(
+                user=request.user,
+                search_term=query
+            )
+    
+    context = {
+        'articles': articles,
+        'query': query,
+        'total_results': len(articles)
+    }
+    
+    return render(request, 'search_results.html', context)
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
 def test_notification(request):
-        Notification.objects.create(
+            Notification.objects.create(
             user=request.user,
             title="Test Notification",
         message="This is a test notification.",
         notification_type='test',
             is_read=False
         )
-        return JsonResponse({'success': True, 'message': 'Test notification sent.'})
+            return JsonResponse({'success': True, 'message': 'Test notification sent.'})
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
@@ -796,11 +1003,11 @@ def create_announcement(request):
         if not title or not message:
             messages.error(request, 'Title and message are required.')
             return redirect('create_announcement')
-        
+
         Announcement.objects.create(title=title, message=message)
         messages.success(request, 'Announcement created successfully!')
         return redirect('admin_dashboard')
-    
+
     return render(request, 'admin/create_announcement.html')
 
 @login_required
@@ -820,37 +1027,127 @@ def generate_summary(request, article_id):
 
 @login_required
 def add_article(request):
+    title = None  # Default value
+    content = None # Default value
+    description = None # Default value
+    category_id = None # Default value
     if request.method == 'POST':
-        title = request.POST.get('title')
-        content = request.POST.get('content')
-        category_id = request.POST.get('category')
-        # Validate fields
-        if not title or not content:
-            messages.error(request, 'Title and content are required.')
-            return redirect('add_article')
-        
-            category = get_object_or_404(Category, id=category_id)
-        article = Articles.objects.create(title=title, content=content, category=category)
-        messages.success(request, 'Article created successfully!')
-        return redirect('article_dashboard')
+            title = request.POST.get('title')
+            content = request.POST.get('content')
+            description = request.POST.get('description', '') # Assuming description might be optional or handled differently
+            category_id = request.POST.get('category')
+            image = request.FILES.get('image') # Get uploaded image
+            pdf_file = request.FILES.get('pdf_file') # Get uploaded PDF
+            action = request.POST.get('action') # Check if user clicked 'Publish' or 'Save Draft'
 
+        # Validate fields
+    if not title or not content or not category_id:
+            messages.error(request, 'Title, content, and category are required.')
+            # Repopulate context for rendering the form again
+            categories = Category.objects.all()
+            return render(request, 'write_article.html', {
+                'categories': categories, 
+                'title': title, 
+                'content': content,
+                'description': description,
+                'selected_category': category_id
+            })
+
+    category = get_object_or_404(Category, id=category_id)
+
+        # Determine status based on action
+    article_status = 'published' if action == 'publish' else 'draft'
+
+        # Create the article
+    try:
+            article = Articles.objects.create(
+                title=title,
+                content=content,
+                description=description, # Add description
+                category=category,
+                author=request.user, # Set the author
+                status=article_status, # Set the status
+                image=image, # Add image
+                pdf_file=pdf_file # Add PDF file
+            )
+            if article_status == 'published':
+                messages.success(request, 'Article published successfully!')
+                # Redirect to the article detail page after publishing
+                return redirect(article.get_absolute_url()) 
+            else:
+                messages.success(request, 'Article saved as draft successfully!')
+                # Redirect to drafts page after saving draft
+                return redirect('user_drafts') 
+    except Exception as e:
+            messages.error(request, f'Error creating article: {e}')
+             # Repopulate context
     categories = Category.objects.all()
-    return render(request, 'admin/add_article.html', {'categories': categories})
+    return render(request, 'write_article.html', {
+                'categories': categories, 
+                'title': title, 
+                'content': content,
+                'description': description,
+                'selected_category': category_id
+            })
+
+    # This part is for GET requests or if POST fails validation before the try block
+    categories = Category.objects.all()
+    return render(request, 'write_article.html', {'categories': categories})
 
 @login_required
 def edit_article(request, article_id):
-    article = get_object_or_404(Articles, id=article_id)
+    article = get_object_or_404(Articles, id=article_id, author=request.user) # Ensure user owns the article
     
     if request.method == 'POST':
+        action = request.POST.get('action') # Check action: publish or save_draft
+        
         article.title = request.POST.get('title', article.title)
         article.content = request.POST.get('content', article.content)
-        article.category_id = request.POST.get('category', article.category_id)
-        article.save()
-        messages.success(request, 'Article updated successfully!')
-        return redirect('article_dashboard')
+        article.description = request.POST.get('description', article.description)
+        category_id = request.POST.get('category')
+        if category_id: # Check if category was actually selected
+             article.category = get_object_or_404(Category, id=category_id)
     
+        # Handle image update
+        if 'image' in request.FILES:
+            article.image = request.FILES['image']
+        
+        # Handle PDF update
+        if 'pdf_file' in request.FILES:
+            article.pdf_file = request.FILES['pdf_file']
+        elif 'remove_pdf' in request.POST: # Add a way to remove PDF if needed
+             article.pdf_file = None
+        
+        # Update status based on action
+        if action == 'publish':
+            article.status = 'published'
+        elif action == 'save_draft': # Or just let it remain draft if already draft
+            article.status = 'draft'
+             
+        # Regenerate slug if title changed (important for published articles)
+        # Use article._state.fields_cache to check if the field was loaded in this request cycle
+        # or compare original value if available
+        # Simplified check: assume title might change
+        if article.status == 'published':
+            new_slug = slugify(article.title)
+            if article.slug != new_slug:
+                 article.slug = new_slug
+                 # Add logic to handle potential slug conflicts if necessary
+
+        try:
+            article.save()
+            if article.status == 'published':
+                messages.success(request, 'Article updated and published successfully!')
+                return redirect(article.get_absolute_url())
+            else:
+                messages.success(request, 'Draft updated successfully!')
+                return redirect('user_drafts')
+        except Exception as e:
+            messages.error(request, f'Error updating article: {e}')
+
     categories = Category.objects.all()
-    return render(request, 'admin/edit_article.html', {'article': article, 'categories': categories})
+    # Use a specific template for editing, perhaps different from write_article if needed
+    return render(request, 'write_article.html', {'article': article, 'categories': categories, 'is_editing': True})
 
 @login_required
 def delete_article(request, article_id):
@@ -869,7 +1166,7 @@ def article_dashboard(request):
 @login_required
 def user_drafts(request):
     drafts = Articles.objects.filter(author=request.user, status='draft').order_by('-created_at')
-    return render(request, 'admin/user_drafts.html', {'drafts': drafts})
+    return render(request, 'drafts.html', {'drafts': drafts})
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
@@ -887,6 +1184,7 @@ def contains_profanity(text):
 @login_required
 def post_comment(request, article_id):
     """Authenticated users can post a comment to a specific article."""
+    article = get_object_or_404(Articles, id=article_id)
     if request.method == 'POST':
         comment_text = request.POST.get('comment_text', '').strip()
 
@@ -896,22 +1194,22 @@ def post_comment(request, article_id):
         if contains_profanity(comment_text):
             return JsonResponse({'success': False, 'error': 'Your comment contains inappropriate language.'}, status=400)
 
-        article = get_object_or_404(Articles, id=article_id)
         comment = Comment.objects.create(user=request.user, article=article, body=comment_text)
-        comment.save()
+        # comment.save() is called implicitly by create()
 
         # Optionally, create a notification for the article author
-        Notification.objects.create(
-            user=article.author,
-            title='New Comment',
-            message=f'{request.user.username} commented on your article "{article.title}".',
-            link=f'/article/{article.id}/',
-            is_read=False,
-            created_at=timezone.now()
-        )
-
+        if article.author != request.user: # Don't notify user for their own comment
+            Notification.objects.create(
+                user=article.author,
+                title='New Comment',
+                message=f'{request.user.username} commented on your article "{article.title}".',
+                link=f'/article/{article.id}/', # Consider using reverse()
+                is_read=False,
+                created_at=timezone.now()
+            )
         return JsonResponse({'success': True, 'comment': comment.body, 'username': request.user.username, 'created_at': comment.created_at.strftime('%Y-%m-%d %H:%M:%S')})
-
+    
+    # If not POST, return error or perhaps redirect/render differently
     return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
 
 @login_required
@@ -948,7 +1246,7 @@ def delete_comment(request, comment_id):
     if request.user != comment.user and not request.user.is_superuser:
         return JsonResponse({'success': False, 'error': 'You do not have permission to delete this comment.'}, status=403)
 
-    comment.delete()
+        comment.delete()
     return JsonResponse({'success': True, 'message': 'Comment deleted successfully.'})
 
 @login_required
@@ -999,7 +1297,7 @@ def get_notifications(request):
         'created_at': n.created_at.strftime('%Y-%m-%d %H:%M:%S'),
         'is_read': n.is_read
     } for n in notifications]
-
+    
     return JsonResponse({'success': True, 'notifications': notification_data})
 
 @login_required
@@ -1012,11 +1310,614 @@ def mark_notification_read(request, notification_id):
 
 @login_required
 def recommendations_view(request):
-    recommendations = get_recommendations(request.user)  # Assuming you have a function to get recommendations
-    return render(request, 'recommendations.html', {'recommendations': recommendations})
+    try:
+        recommendations = Articles.objects.filter(status='published').order_by('-created_at')[:10]
 
+        return render(request, 'recommendations.html', {
+            'recommendations': recommendations
+        })
+    except Exception as e:
+        return render(request, 'recommendations.html', {
+            'error_message': str(e)
+        })
 @login_required
 def subscription_view(request):
-    # Logic for displaying subscription options
-    plans = Plan.objects.all()  # Assuming you have a Plan model
-    return render(request, 'subscription.html', {'plans': plans})
+    success = request.GET.get('payment') == 'success'
+    error = request.GET.get('payment') in ['failed', 'error']
+    
+    if success:
+        messages.success(request, 'Payment successful! Your subscription is now active.')
+    elif error:
+        messages.error(request, 'Payment processing failed. Please contact support.')
+
+    """Displays subscription plans and the user's current plan."""
+    try:
+        # Get or create default plans if they don't exist
+        free_plan, _ = Plan.objects.get_or_create(
+            name='Free',
+            defaults={
+                'description': 'Basic free plan',
+                'price': 0,
+                'duration_days': 0,
+                'features': {
+                    'read_articles': True,
+                    'comment': True,
+                    'ad_free': False,
+                    'exclusive_content': False
+                }
+            }
+        )
+        
+        monthly_plan, _ = Plan.objects.get_or_create(
+            name='Premium',
+            defaults={
+                'description': 'Premium monthly plan',
+                'price': 100,
+                'duration_days': 30,
+                'features': {
+                    'read_articles': True,
+                    'comment': True,
+                    'ad_free': True,
+                    'exclusive_content': True
+                }
+            }
+        )
+        
+        six_month_plan, _ = Plan.objects.get_or_create(
+            name='Premium 6 Months',
+            defaults={
+                'description': 'Premium 6 month plan',
+                'price': 600,
+                'duration_days': 180,
+                'features': {
+                    'read_articles': True,
+                    'comment': True,
+                    'ad_free': True,
+                    'exclusive_content': True
+                }
+            }
+        )
+        
+        # Get user's current active plan
+        try:
+            user_plan = UserPlan.objects.get(user=request.user, is_active=True)
+        except UserPlan.DoesNotExist:
+            user_plan = None
+        
+        # Get payment history
+        payments = Transaction.objects.filter(user=request.user).order_by('-created_at')
+        
+        context = {
+            'free_plan': free_plan,
+            'monthly_plan': monthly_plan,
+            'six_month_plan': six_month_plan,
+            'user_plan': user_plan,
+            'payments': payments,
+            'razorpay_key': settings.RAZORPAY_KEY_ID,
+        }
+        return render(request, 'subscriptions.html', context)
+        
+    except Exception as e:
+        messages.error(request, f'Error loading subscription page: {str(e)}')
+        return redirect('home')
+
+@csrf_exempt
+@login_required
+def create_order(request, plan_id):
+    plan = get_object_or_404(Plan, id=plan_id)
+    client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+    
+    try:
+        order_data = {
+            'amount': plan.price_in_paise,
+            'currency': 'INR',
+            'receipt': f'order_{plan_id}_{request.user.id}',
+            'notes': {
+                'plan_id': plan.id,
+                'user_id': request.user.id
+            }
+        }
+        order = client.order.create(data=order_data)
+        
+        Subscription.objects.create(
+            user=request.user,
+            plan=plan,
+            razorpay_order_id=order['id'],
+            active=False
+        )
+        
+        return JsonResponse({
+        'success': True,
+        'key': RAZORPAY_KEY_ID,
+        'amount': plan.price * 100,
+        'currency': 'INR',
+        'order_id': razorpay_order_id
+    })
+    except Exception as e:
+        logger.error(f"Error creating order: {str(e)}")
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@csrf_exempt
+@login_required
+def verify_payment(request):
+    if request.method == "POST":
+        logger.info("Payment verification started")
+        try:
+            # Extract payment details
+            payment_id = request.POST.get('razorpay_payment_id', '').strip()
+            order_id = request.POST.get('razorpay_order_id', '').strip()
+            signature = request.POST.get('razorpay_signature', '').strip()
+            
+            logger.debug(f"Received payment details - Payment ID: {payment_id}, Order ID: {order_id}")
+
+            # Validate input parameters
+            if not all([payment_id, order_id, signature]):
+                logger.error("Missing payment parameters in request")
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Missing payment details. Please contact support.'
+                }, status=400)
+
+            # Retrieve subscription and plan
+            try:
+                subscription = Subscription.objects.select_related('plan').get(
+                    razorpay_order_id=order_id,
+                    user=request.user
+                )
+                plan = subscription.plan
+                logger.debug(f"Found subscription: {subscription.id} for plan: {plan.id}")
+            except Subscription.DoesNotExist:
+                logger.error(f"Subscription not found for order ID: {order_id}")
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid subscription order. Please contact support.'
+                }, status=404)
+
+            # Initialize Razorpay client
+            client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+            # Verify payment signature
+            try:
+                logger.debug("Attempting signature verification")
+                client.utility.verify_payment_signature({
+                    'razorpay_payment_id': payment_id,
+                    'razorpay_order_id': order_id,
+                    'razorpay_signature': signature
+                })
+                logger.info("Signature verification successful")
+            except razorpay.errors.SignatureVerificationError as e:
+                logger.error(f"Signature verification failed: {str(e)}")
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Payment verification failed. Please contact support.'
+                }, status=400)
+
+            # Verify payment amount
+            try:
+                logger.debug("Fetching payment details from Razorpay")
+                payment = client.payment.fetch(payment_id)
+                if payment['amount'] != plan.price_in_paise:
+                    logger.error(f"Amount mismatch: Expected {plan.price_in_paise}, Got {payment['amount']}")
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Payment amount mismatch. Please contact support.'
+                    }, status=400)
+                logger.info("Payment amount verified successfully")
+            except Exception as e:
+                logger.error(f"Payment verification failed: {str(e)}")
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Payment verification failed. Please try again.'
+                }, status=500)
+            if payment_valid:
+            # Save to database
+                Subscription.objects.create(
+            user=request.user,
+            plan=plan,
+            payment_id=payment_id,
+            status='Active'
+        )
+            return JsonResponse({
+            'success': True,
+            'redirect_url': reverse('subscriptions')
+        })
+            return JsonResponse({'success': False})
+            # Process subscription activation
+            with transaction.atomic():
+                logger.debug("Starting database transaction")
+                
+                # Update subscription
+                subscription.razorpay_payment_id = payment_id
+                subscription.razorpay_signature = signature
+                subscription.active = True
+                subscription.save()
+                logger.info(f"Subscription {subscription.id} updated")
+
+                # Deactivate existing plans
+                deactivated = UserPlan.objects.filter(
+                    user=request.user,
+                    is_active=True
+                ).update(is_active=False)
+                logger.info(f"Deactivated {deactivated} existing plans")
+
+                # Create new user plan
+                end_date = timezone.now() + timedelta(days=plan.duration_days)
+                new_plan = UserPlan.objects.create(
+                    user=request.user,
+                    plan=plan,
+                    is_active=True,
+                    start_date=timezone.now(),
+                    end_date=end_date,
+                    auto_renew=False
+                )
+                logger.info(f"Created new user plan: {new_plan.id}")
+
+                # Create transaction record
+                transaction_record = Transaction.objects.create(
+                    user=request.user,
+                    plan=plan,
+                    amount=plan.price,
+                    payment_method='Razorpay',
+                    payment_id=payment_id,
+                    status='completed'
+                )
+                logger.info(f"Created transaction record: {transaction_record.id}")
+
+                # Create notification
+                Notification.objects.create(
+                    user=request.user,
+                    title='Subscription Activated',
+                    message=f'Your {plan.name} plan is active until {end_date.strftime("%B %d, %Y")}',
+                    notification_type='subscription',
+                    related_link=reverse('subscription')
+                )
+                logger.info("Created notification")
+
+                logger.info("Subscription activated successfully")
+                return JsonResponse({
+                    'success': True,
+                    'redirect_url': reverse('subscription') + '?payment=success'
+                })
+
+        except Exception as e:
+            logger.critical(f"Critical error in verify_payment: {str(e)}", exc_info=True)
+            return JsonResponse({
+                'success': False,
+                'error': 'An unexpected error occurred. Our team has been notified.',
+                'redirect_url': reverse('subscription') + '?payment=failed',
+            }, status=500)
+    
+    return JsonResponse({
+        'success': False,
+        'error': 'Invalid request method'
+    }, status=405)
+@login_required
+def payment_view(request, plan_id):
+    plan = get_object_or_404(Plan, id=plan_id)
+    context = {
+        'plan': plan,
+        'razorpay_key': settings.RAZORPAY_KEY_ID,
+        'now': timezone.now()  # Add this line
+    }
+    return render(request, 'payment.html', context)
+@login_required
+def update_password_view(request):
+    if request.method == 'POST':
+        current_password = request.POST.get('current_password')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+
+        user = request.user
+        
+        if not user.check_password(current_password):
+            messages.error(request, 'Current password is incorrect!')
+            return redirect('profile')
+            
+        if new_password != confirm_password:
+            messages.error(request, 'New passwords do not match!')
+            return redirect('profile')
+            
+        if len(new_password) < 8:
+            messages.error(request, 'Password must be at least 8 characters!')
+            return redirect('profile')
+
+        user.set_password(new_password)
+        user.save()
+        
+        # Re-authenticate user after password change
+        update_session_auth_hash(request, user)
+        messages.success(request, 'Password updated successfully!')
+        return redirect('profile')
+        
+    return redirect('profile')
+# Add these functions to your views.py file
+
+
+
+@login_required
+def subscription_page(request):
+    """View for subscription page with success message handling"""
+    success = request.GET.get('success', False)
+    message = request.GET.get('message', '')
+    
+    # Check if user has active subscription
+    active_subscription = UserPlan.objects.filter(
+        user=request.user,
+        is_active=True,
+        end_date__gt=timezone.now()
+    ).first()
+    
+    # Get available plans
+    plans = Plan.objects.all()
+    
+    context = {
+        'plans': plans,
+        'active_subscription': active_subscription,
+        'success': success,
+        'message': message
+    }
+    
+    return render(request, 'subscriptions.html', context)
+
+@login_required
+def payment_page(request):
+    """View for payment page with plan details"""
+    plan_id = request.GET.get('plan_id')
+    
+    if not plan_id:
+        return redirect('subscription_page')
+    
+    try:
+        plan = Plan.objects.get(id=plan_id)
+    except Plan.DoesNotExist:
+        return redirect('subscription_page')
+    
+    context = {
+        'plan': plan
+    }
+    
+    return render(request, 'payment.html', context)
+
+@csrf_exempt
+@login_required
+def update_subscription(request):
+    """API endpoint to update subscription after successful payment"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request method'})
+    
+    plan_id = request.POST.get('plan_id')
+    payment_id = request.POST.get('payment_id')
+    
+    if not plan_id or not payment_id:
+        return JsonResponse({'success': False, 'message': 'Missing required parameters'})
+    
+    try:
+        # Get the plan
+        plan = Plan.objects.get(id=plan_id)
+        
+        # Create subscription record
+        subscription = Subscription(
+            user=request.user,
+            plan=plan,
+            razorpay_payment_id=payment_id,
+            active=True
+        )
+        subscription.save()
+        
+        # Calculate end date based on plan duration
+        end_date = timezone.now() + timedelta(days=plan.duration_days)
+        
+        # Check if user already has an active plan
+        existing_plan = UserPlan.objects.filter(
+            user=request.user,
+            is_active=True
+        ).first()
+        
+        if existing_plan:
+            # Update existing plan
+            existing_plan.plan = plan
+            existing_plan.start_date = timezone.now()
+            existing_plan.end_date = end_date
+            existing_plan.is_active = True
+            existing_plan.stripe_subscription_id = payment_id  # Using Razorpay ID here
+            existing_plan.save()
+        else:
+            # Create new user plan
+            user_plan = UserPlan(
+                user=request.user,
+                plan=plan,
+                start_date=timezone.now(),
+                end_date=end_date,
+                is_active=True,
+                stripe_subscription_id=payment_id  # Using Razorpay ID here
+            )
+            user_plan.save()
+        
+        return JsonResponse({'success': True})
+    
+    except Plan.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Plan not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+@csrf_exempt
+@require_POST
+def start_reading_session(request):
+    article_id = request.POST.get('article_id')
+    if not article_id or not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
+    
+    article = get_object_or_404(Articles, id=article_id)
+    session = ReadingSession.objects.create(
+        user=request.user,
+        article=article,
+        start_time=timezone.now()
+    )
+    return JsonResponse({'success': True, 'session_id': session.id})
+
+@csrf_exempt
+@require_POST
+def end_reading_session(request):
+    session_id = request.POST.get('session_id')
+    scroll_depth = float(request.POST.get('scroll_depth', 0))
+    
+    if not session_id or not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
+    
+    session = get_object_or_404(ReadingSession, id=session_id, user=request.user)
+    session.end_time = timezone.now()
+    session.scroll_depth = scroll_depth
+    session.save()
+    
+    # Update user's reading profile
+    if session.words_per_minute:
+        profile, created = UserReadingProfile.objects.get_or_create(user=request.user)
+        profile.update_reading_speed(session.words_per_minute)
+    
+    return JsonResponse({
+        'success': True,
+        'wpm': session.words_per_minute,
+        'time_spent': session.time_spent
+    })
+
+def home_view(request):
+    # Only fetch published articles
+    articles = Articles.objects.filter(status='published').order_by('-created_at')[:6]
+    
+    recommendations = []
+    if request.user.is_authenticated:
+        try:
+            profile = UserReadingProfile.objects.get(user=request.user)
+            sessions = ReadingSession.objects.filter(user=request.user)
+            recommender = ContentRecommender()
+            recommendations = recommender.recommend(
+                request.user, 
+                Articles.objects.all(), 
+                profile, 
+                sessions,
+                top_n=3
+            )
+        except UserReadingProfile.DoesNotExist:
+            pass
+    
+    context = {
+        'articles': articles,
+        'recommendations': recommendations,
+    }
+    return render(request, 'home.html', context)
+@login_required
+def update_preferences(request):
+    """Updates user's content preferences."""
+    if request.method == 'POST':
+        try:
+            # Get selected categories
+            category_ids = request.POST.getlist('categories')
+            categories = Category.objects.filter(id__in=category_ids)
+            
+            # Get or create user preferences
+            preferences, created = UserPreferences.objects.get_or_create(user=request.user)
+            
+            # Update preferred categories
+            preferences.preferred_categories.set(categories)
+            
+            messages.success(request, 'Your preferences have been updated successfully!')
+            return redirect('profile')
+            
+        except Exception as e:
+            messages.error(request, f'Error updating preferences: {str(e)}')
+            return redirect('profile')
+    
+    return redirect('profile')
+
+@login_required
+def payment_success(request):
+    """Handle successful payment."""
+    messages.success(request, 'Payment successful! Your subscription has been activated.')
+    return redirect('subscription')
+
+@login_required
+def payment_cancel(request):
+    """Handle cancelled payment."""
+    messages.warning(request, 'Payment was cancelled. Your subscription has not been activated.')
+    return redirect('subscription')
+
+@csrf_exempt
+def razorpay_webhook(request):
+    """Handle Razorpay webhook events."""
+    if request.method == "POST":
+        try:
+            # Get webhook data
+            webhook_data = json.loads(request.body)
+            
+            # Initialize Razorpay client
+            client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+            
+            # Verify webhook signature
+            webhook_signature = request.headers.get('X-Razorpay-Signature')
+            client.utility.verify_webhook_signature(request.body.decode(), webhook_signature, settings.RAZORPAY_WEBHOOK_SECRET)
+            
+            # Handle different webhook events
+            if webhook_data['event'] == 'payment.captured':
+                payment_id = webhook_data['payload']['payment']['entity']['id']
+                order_id = webhook_data['payload']['payment']['entity']['order_id']
+                
+                try:
+                    subscription = Subscription.objects.get(razorpay_order_id=order_id)
+                    
+                    # Update subscription status
+                    subscription.razorpay_payment_id = payment_id
+                    subscription.active = True
+                    subscription.save()
+                    
+                    # Create or update user plan
+                    UserPlan.objects.filter(user=subscription.user, is_active=True).update(is_active=False)
+                    UserPlan.objects.create(
+                        user=subscription.user,
+                        plan=subscription.plan,
+                        is_active=True,
+                        end_date=timezone.now() + timedelta(days=subscription.plan.duration_days)
+                    )
+                    
+                    # Create transaction record
+                    transaction_record = Transaction.objects.create(
+                        user=subscription.user,
+                        plan=subscription.plan,
+                        amount=subscription.plan.price,
+                        payment_method='Razorpay',
+                        payment_id=payment_id,
+                        status='completed'
+                    )
+                    
+                    # Create notification
+                    Notification.objects.create(
+                        user=subscription.user,
+                        title='Subscription Activated',
+                        message=f'Your {subscription.plan.name} plan subscription is now active.',
+                        notification_type='subscription'
+                    )
+                    
+                except Subscription.DoesNotExist:
+                    return JsonResponse({'status': 'error', 'message': 'Subscription not found'}, status=400)
+            
+            return JsonResponse({'status': 'success'})
+            
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
+
+@login_required
+def switch_to_free_plan(request):
+    """Switch the user's subscription to the free plan."""
+    try:
+        free_plan = Plan.objects.get(name='Free')
+        user_plan = UserPlan.objects.get(user=request.user, is_active=True)
+        user_plan.plan = free_plan
+        user_plan.save()
+        messages.success(request, 'You have successfully switched to the Free plan.')
+    except Plan.DoesNotExist:
+        messages.error(request, 'The Free plan does not exist.')
+    except UserPlan.DoesNotExist:
+        messages.error(request, 'You do not have an active subscription to switch.')
+    
+    return redirect('subscription')  # Redirect back to the subscription page

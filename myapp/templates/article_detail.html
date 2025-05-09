@@ -463,6 +463,73 @@ function getCookie(name) {
     }
     return cookieValue;
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    let sessionId = null;
+    let startTime = null;
+    let maxScrollHeight = document.body.scrollHeight - window.innerHeight;
+    
+    // Start reading session when page loads
+    fetch('/start_reading_session/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            article_id: {{ article.id }}
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        sessionId = data.session_id;
+        startTime = new Date();
+    });
+    
+    // Track scroll depth
+    let scrollDepthSent = false;
+    window.addEventListener('scroll', function() {
+        const scrollDepth = Math.min(100, Math.round((window.scrollY / maxScrollHeight) * 100));
+        
+        // Send scroll depth when user reaches bottom or leaves page
+        if (scrollDepth >= 90 && !scrollDepthSent) {
+            sendReadingData(scrollDepth);
+            scrollDepthSent = true;
+        }
+    });
+    
+    // Send reading data when user leaves page
+    window.addEventListener('beforeunload', function() {
+        const scrollDepth = Math.min(100, Math.round((window.scrollY / maxScrollHeight) * 100));
+        sendReadingData(scrollDepth);
+        
+        // Show reading speed popup if we have the data
+        if (sessionId) {
+            fetch('/end_reading_session/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    scroll_depth: scrollDepth
+                }),
+                keepalive: true  // Ensure request completes even if page unloads
+            });
+        }
+    });
+    
+    function sendReadingData(scrollDepth) {
+        if (!sessionId) return;
+        
+        navigator.sendBeacon('/end_reading_session/', JSON.stringify({
+            session_id: sessionId,
+            scroll_depth: scrollDepth,
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        }));
+    }
+});
 </script>
 
 </body>

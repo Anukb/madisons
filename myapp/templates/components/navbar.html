@@ -1,0 +1,38 @@
+{% load static %}
+<nav class="main-nav {% if request.resolver_match.url_name in 'home,view_articles' %}nav-fixed{% endif %}">
+    <div class="nav-container">
+        <div class="nav-left">
+            <a href="{% url 'home' %}" class="brand">Madison Magazine</a>
+        </div>
+        
+        {% if request.resolver_match.url_name in 'home,view_articles' %}
+        <form class="search-form" method="GET" action="{% url 'search_articles' %}">
+            <div class="search-wrapper">
+                <input type="text" 
+                       name="query" 
+                       placeholder="Search articles..." 
+                       class="search-input"
+                       value="{{ request.GET.query|default:'' }}"
+                       required>
+                <button type="submit" class="search-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </button>
+            </div>
+        </form>
+        {% endif %}
+
+        <div class="nav-right">
+            {% if user.is_authenticated %}
+                <a href="{% url 'profile' %}" class="nav-link">Profile</a>
+                <a href="{% url 'recommendations' %}" class="nav-link">For You</a>
+                <a href="{% url 'logout' %}" class="nav-link">Logout</a>
+            {% else %}
+                <a href="{% url 'register' %}" class="nav-link">Register</a>
+                <a href="{% url 'login' %}" class="nav-link">Login</a>
+            {% endif %}
+        </div>
+    </div>
+</nav> 

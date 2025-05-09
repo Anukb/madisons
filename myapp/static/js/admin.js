@@ -423,3 +423,13 @@ function getCookie(name) {
     }
     return cookieValue;
 }
+
+// Example of including CSRF token in an AJAX request
+fetch('/your-url/', {
+    method: 'POST',
+    headers: {
+        'X-CSRFToken': getCookie('csrftoken'),
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+});

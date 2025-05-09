@@ -1,191 +1,197 @@
 {% extends 'base.html' %}
-    {% load static %}
+{% load static %}
 
 {% block content %}
-<div class="container py-5">
-    <h1 class="text-center mb-5">Choose Your Plan</h1>
-    
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        {% endfor %}
-    {% endif %}
+<!-- Background with gradient overlay -->
+<div class="background-overlay"></div>
+<div class="background-image" style="background-image: url('https://i.pinimg.com/736x/88/53/19/885319f8cfa91ac9355b73fe91fbbef7.jpg');"></div>
 
-    <!-- Current Plan Section (if user has an active plan) -->
-    {% if user_plan %}
-        <div class="current-plan-section mb-5">
-            <div class="card border-primary">
-                <div class="card-body">
-                    <h3 class="card-title">Your Current Plan</h3>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Plan:</strong> {{ user_plan.plan.name }}</p>
-                            <p><strong>Status:</strong> 
-                                <span class="badge {% if user_plan.is_active %}bg-success{% else %}bg-danger{% endif %}">
-                                    {{ user_plan.is_active|yesno:"Active,Inactive" }}
-                                </span>
-                            </p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Start Date:</strong> {{ user_plan.start_date|date:"F j, Y" }}</p>
-                            <p><strong>End Date:</strong> {{ user_plan.end_date|date:"F j, Y" }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    {% endif %}
+<!-- Add Razorpay script -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
-    <!-- Available Plans Section -->
-    <div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
-        <!-- Free Plan -->
-        <div class="col">
-            <div class="card mb-4 rounded-3 shadow-sm">
-                <div class="card-header py-3">
-                    <h4 class="my-0 fw-normal">Free</h4>
-                </div>
-                <div class="card-body">
-                    <h1 class="card-title pricing-card-title">$0<small class="text-muted fw-light">/mo</small></h1>
-                    <ul class="list-unstyled mt-3 mb-4">
-                        <li><i class="fas fa-check text-success"></i> Basic article access</li>
-                        <li><i class="fas fa-check text-success"></i> Comment on articles</li>
-                        <li><i class="fas fa-check text-success"></i> Basic profile</li>
-                        <li><i class="fas fa-times text-danger"></i> No ads</li>
-            </ul>
-                    <button type="button" class="w-100 btn btn-lg btn-outline-primary">Current Plan</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Premium Plan -->
-        <div class="col">
-            <div class="card mb-4 rounded-3 shadow-sm border-primary">
-                <div class="card-header py-3 text-white bg-primary border-primary">
-                    <h4 class="my-0 fw-normal">Premium</h4>
-                </div>
-                <div class="card-body">
-                    <h1 class="card-title pricing-card-title">$15<small class="text-muted fw-light">/mo</small></h1>
-                    <ul class="list-unstyled mt-3 mb-4">
-                        <li><i class="fas fa-check text-success"></i> All Free features</li>
-                        <li><i class="fas fa-check text-success"></i> Ad-free experience</li>
-                        <li><i class="fas fa-check text-success"></i> Exclusive content</li>
-                        <li><i class="fas fa-check text-success"></i> Priority support</li>
-                </ul>
-                    <button type="button" class="w-100 btn btn-lg btn-primary">Get Started</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Pro Plan -->
-        <div class="col">
-            <div class="card mb-4 rounded-3 shadow-sm border-primary">
-                <div class="card-header py-3 text-white bg-primary border-primary">
-                    <h4 class="my-0 fw-normal">Pro</h4>
-                </div>
-                <div class="card-body">
-                    <h1 class="card-title pricing-card-title">$29<small class="text-muted fw-light">/mo</small></h1>
-                    <ul class="list-unstyled mt-3 mb-4">
-                        <li><i class="fas fa-check text-success"></i> All Premium features</li>
-                        <li><i class="fas fa-check text-success"></i> Early access to articles</li>
-                        <li><i class="fas fa-check text-success"></i> Custom profile badge</li>
-                        <li><i class="fas fa-check text-success"></i> Offline reading</li>
-                    </ul>
-                    <button type="button" class="w-100 btn btn-lg btn-primary">Get Started</button>
-                </div>
-            </div>
-        </div>
+<div class="container py-5 position-relative">
+    <!-- Floating sparkles in background -->
+    <div class="sparkle-container">
+        <div class="sparkle s1"></div>
+        <div class="sparkle s2"></div>
+        <div class="sparkle s3"></div>
+        <div class="sparkle s4"></div>
     </div>
 
-    <!-- Features Comparison -->
-    <div class="table-responsive mt-5">
-        <h2 class="text-center mb-4">Features Comparison</h2>
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th style="width: 34%">Feature</th>
-                    <th style="width: 22%">Free</th>
-                    <th style="width: 22%">Premium</th>
-                    <th style="width: 22%">Pro</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Read Articles</td>
-                    <td><i class="fas fa-check text-success"></i></td>
-                    <td><i class="fas fa-check text-success"></i></td>
-                    <td><i class="fas fa-check text-success"></i></td>
-                </tr>
-                <tr>
-                    <td>Comment on Articles</td>
-                    <td><i class="fas fa-check text-success"></i></td>
-                    <td><i class="fas fa-check text-success"></i></td>
-                    <td><i class="fas fa-check text-success"></i></td>
-                </tr>
-                <tr>
-                    <td>Ad-free Experience</td>
-                    <td><i class="fas fa-times text-danger"></i></td>
-                    <td><i class="fas fa-check text-success"></i></td>
-                    <td><i class="fas fa-check text-success"></i></td>
-                </tr>
-                <tr>
-                    <td>Exclusive Content</td>
-                    <td><i class="fas fa-times text-danger"></i></td>
-                    <td><i class="fas fa-check text-success"></i></td>
-                    <td><i class="fas fa-check text-success"></i></td>
-                </tr>
-                <tr>
-                    <td>Early Access to Articles</td>
-                    <td><i class="fas fa-times text-danger"></i></td>
-                    <td><i class="fas fa-times text-danger"></i></td>
-                    <td><i class="fas fa-check text-success"></i></td>
-                </tr>
-                <tr>
-                    <td>Custom Profile Badge</td>
-                    <td><i class="fas fa-times text-danger"></i></td>
-                    <td><i class="fas fa-times text-danger"></i></td>
-                    <td><i class="fas fa-check text-success"></i></td>
-                </tr>
-                <tr>
-                    <td>Offline Reading</td>
-                    <td><i class="fas fa-times text-danger"></i></td>
-                    <td><i class="fas fa-times text-danger"></i></td>
-                    <td><i class="fas fa-check text-success"></i></td>
-                </tr>
-                <tr>
-                    <td>Priority Support</td>
-                    <td><i class="fas fa-times text-danger"></i></td>
-                    <td><i class="fas fa-check text-success"></i></td>
-                    <td><i class="fas fa-check text-success"></i></td>
-                </tr>
-            </tbody>
-        </table>
+    <!-- Header section -->
+    <div class="text-center mb-5">
+        <div class="header-icon mb-3">
+            <i class="fas fa-crown"></i>
+            <i class="fas fa-star"></i>
+            <i class="fas fa-heart"></i>
+        </div>
+        <h1 class="display-5 fw-bold text-white mb-3 animate-pop-in">Choose Your Perfect Plan</h1>
+        <p class="text-pink-100 animate-pop-in" style="animation-delay: 0.2s">Select the subscription that fits your needs</p>
+    </div>
+    
+    <!-- Messages Container -->
+   <!-- Add this to the messages section -->
+<!-- Add this to the messages section -->
+{% if messages %}
+<div class="alert-container">
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show glass-card" role="alert">
+        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %} me-2"></i>
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+    <!-- Current Plan Section -->
+    {% if user_plan %}
+        <div class="subscription-info glass-card p-4 mb-4 animate-fade-in">
+            <h3 class="h5 fw-bold text-center mb-4 text-white"><i class="fas fa-crown me-2"></i>Your Current Subscription</h3>
+            <div class="current-plan-highlight text-center">
+                <h4 class="text-pink-300 mb-2">{{ user_plan.plan.name }}</h4>
+                <p class="text-pink-100 mb-1"><i class="fas fa-calendar-check me-2"></i>Active until: {{ user_plan.end_date|date:"F d, Y" }}</p>
+                <p class="text-pink-100"><i class="fas fa-clock me-2"></i>
+                    {% if user_plan.end_date > now %}
+                        {{ user_plan.end_date|timeuntil }} remaining
+                    {% else %}
+                        Expired
+                    {% endif %}
+                </p>
+                <div class="plan-features mt-3">
+                    <ul class="feature-list text-center ps-0">
+                        {% for feature in user_plan.plan.get_features_list %}
+                            <li class="text-pink-100"><i class="fas fa-check text-success me-2"></i>{{ feature }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Subscription Plans -->
+    <div class="row justify-content-center g-4 mb-5">
+        <!-- Free Plan -->
+        <div class="col-md-6 col-lg-4">
+            <div class="plan-card h-100 glass-card animate-slide-up {% if user_plan and user_plan.plan.name|lower == 'free' %}active-plan{% endif %}" style="animation-delay: 0.1s">
+                <div class="card-body p-4 text-center position-relative">
+                    <div class="plan-badge bg-pink-200 text-pink-800 mb-3"><i class="fas fa-gem me-2"></i>Free</div>
+                    <h4 class="h5 fw-bold mb-3 text-white">Basic</h4>
+                    <h2 class="price-display mb-4 text-white">₹0<span class="text-pink-200">/month</span></h2> 
+                    <ul class="feature-list text-start ps-0 mb-4">
+                        <li class="text-pink-100"><i class="fas fa-check text-success me-2"></i>Read Articles</li>
+                        <li class="text-pink-100"><i class="fas fa-check text-success me-2"></i>Comment on Articles</li>
+                        <li class="text-pink-100"><i class="fas fa-times text-pink-300 me-2"></i>Ad-free Experience</li>
+                        <li class="text-pink-100"><i class="fas fa-times text-pink-300 me-2"></i>Exclusive Content</li>
+                        <li class="text-pink-100"><i class="fas fa-times text-pink-300 me-2"></i>Offline Reading</li>
+                    </ul>
+                    
+                    {% if user_plan and user_plan.plan.name|lower == 'free' %}
+                        <button class="btn btn-pink-300 w-100 py-2 disabled"><i class="fas fa-check-circle me-2"></i>Current Plan</button>
+                    {% else %}
+                        <form method="post" action="{% url 'switch_to_free_plan' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-pink-200 w-100 py-2">
+                                <i class="fas fa-user me-2"></i>Continue Free
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 1 Month Premium Plan -->
+        <div class="col-md-6 col-lg-4">
+            <div class="plan-card h-100 glass-card position-relative premium-card animate-slide-up {% if user_plan and user_plan.plan.name|lower == 'premium' %}active-plan{% endif %}" style="animation-delay: 0.2s">
+                <div class="popular-badge bg-pink-500 text-white"><i class="fas fa-star me-1"></i>Popular</div>
+                <div class="card-body p-4 text-center">
+                    <div class="plan-badge bg-pink-500 text-white mb-3"><i class="fas fa-crown me-2"></i>Premium</div>
+                    <h4 class="h5 fw-bold mb-3 text-white">1 Month</h4>
+                    <h2 class="price-display text-pink-100 mb-4">₹{{ monthly_plan.price }}<span class="text-pink-300">/month</span></h2> 
+                    <ul class="feature-list text-start ps-0 mb-4">
+                        <li class="text-pink-100"><i class="fas fa-check text-pink-300 me-2"></i>Everything in Free</li>
+                        <li class="text-pink-100"><i class="fas fa-check text-pink-300 me-2"></i>Ad-free Experience</li>
+                        <li class="text-pink-100"><i class="fas fa-check text-pink-300 me-2"></i>Exclusive Content</li>
+                        <li class="text-pink-100"><i class="fas fa-check text-pink-300 me-2"></i>Offline Reading</li>
+                        <li class="text-pink-100"><i class="fas fa-check text-pink-300 me-2"></i>Priority Support</li>
+                    </ul>
+                    
+                    {% if user_plan and user_plan.plan.name|lower == 'premium' %}
+                        <button class="btn btn-pink-500 w-100 py-2 disabled">
+                            <i class="fas fa-check-circle me-2"></i>Current Plan
+                        </button>
+                    {% else %}
+                        <div class="subscribe-button-container">
+                            <a href="{% url 'payment_view' plan_id=monthly_plan.id %}" class="btn btn-purple-gradient w-100 py-2 glittery-btn">
+                                <span class="glitter"></span>
+                                <span class="glitter"></span>
+                                <span class="glitter"></span>
+                                <i class="fas fa-rocket me-2"></i>Subscribe Now
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 6 Months Premium Plan -->
+        <div class="col-md-6 col-lg-4">
+            <div class="plan-card h-100 glass-card position-relative premium-card animate-slide-up {% if user_plan and user_plan.plan.name|lower == 'premium 6 months' %}active-plan{% endif %}" style="animation-delay: 0.3s">
+                <div class="popular-badge bg-purple-500 text-white"><i class="fas fa-bolt me-1"></i>Best Value</div>
+                <div class="card-body p-4 text-center">
+                    <div class="plan-badge bg-purple-500 text-white mb-3"><i class="fas fa-calendar-alt me-2"></i>Premium</div>
+                    <h4 class="h5 fw-bold mb-3 text-white">6 Months</h4>
+                    <h2 class="price-display text-purple-100 mb-4">₹{{ six_month_plan.price }}<span class="text-purple-300">/6 months</span></h2>
+                    <div class="savings-badge mb-3">Save {{ six_month_plan.get_savings_percentage }}%</div>
+                    <ul class="feature-list text-start ps-0 mb-4">
+                        <li class="text-pink-100"><i class="fas fa-check text-purple-300 me-2"></i>Everything in 1 Month</li>
+                        <li class="text-pink-100"><i class="fas fa-check text-purple-300 me-2"></i>Ad-free Experience</li>
+                        <li class="text-pink-100"><i class="fas fa-check text-purple-300 me-2"></i>Exclusive Content</li>
+                        <li class="text-pink-100"><i class="fas fa-check text-purple-300 me-2"></i>Offline Reading</li>
+                        <li class="text-pink-100"><i class="fas fa-check text-purple-300 me-2"></i>Priority Support</li>
+                    </ul>
+                    
+                    {% if user_plan and user_plan.plan.name|lower == 'premium 6 months' %}
+                        <button class="btn btn-purple-500 w-100 py-2 disabled">
+                            <i class="fas fa-check-circle me-2"></i>Current Plan
+                        </button>
+                    {% else %}
+                        <div class="subscribe-button-container">
+                            <a href="{% url 'payment_view' plan_id=six_month_plan.id %}" class="btn btn-purple-gradient w-100 py-2 glittery-btn">
+                                <span class="glitter"></span>
+                                <span class="glitter"></span>
+                                <span class="glitter"></span>
+                                <i class="fas fa-rocket me-2"></i>Subscribe Now
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Payment History Section -->
     {% if payments %}
-        <div class="mt-5">
-            <h2 class="text-center mb-4">Payment History</h2>
+        <div class="payment-history glass-card p-4 animate-fade-in" style="animation-delay: 0.5s">
+            <h2 class="h5 fw-bold text-center mb-4 text-white"><i class="fas fa-receipt me-2"></i>Payment History</h2>
             <div class="table-responsive">
-                <table class="table">
+                <table class="table table-pink">
                     <thead>
                         <tr>
-                            <th>Date</th>
-                            <th>Plan</th>
-                            <th>Amount</th>
-                            <th>Status</th>
+                            <th class="text-pink-100"><i class="fas fa-calendar me-2"></i>Date</th>
+                            <th class="text-pink-100"><i class="fas fa-tag me-2"></i>Plan</th>
+                            <th class="text-pink-100"><i class="fas fa-dollar-sign me-2"></i>Amount</th>
+                            <th class="text-pink-100"><i class="fas fa-info-circle me-2"></i>Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for payment in payments %}
                             <tr>
-                                <td>{{ payment.created_at|date:"F j, Y" }}</td>
-                                <td>{{ payment.plan.name }}</td>
-                                <td>${{ payment.amount }}</td>
+                                <td class="text-white">{{ payment.created_at|date:"F j, Y" }}</td>
+                                <td class="text-white">{{ payment.plan.name }}</td>
+                                <td class="text-white">₹{{ payment.amount }}</td>
                                 <td>
-                                    <span class="badge {% if payment.status == 'completed' %}bg-success{% else %}bg-warning{% endif %}">
+                                    <span class="badge rounded-pill {% if payment.status == 'completed' %}bg-success{% else %}bg-warning{% endif %} py-1 px-2">
+                                        <i class="fas {% if payment.status == 'completed' %}fa-check-circle{% else %}fa-clock{% endif %} me-1"></i>
                                         {{ payment.status|title }}
                                     </span>
                                 </td>
@@ -197,53 +203,527 @@
         </div>
     {% endif %}
 </div>
-
-<!-- Add custom CSS -->
+<!-- Custom CSS -->
 <style>
-    .card {
-        transition: transform 0.3s ease;
+    :root {
+        --pink-50: #fdf2f8;
+        --pink-100: #fce7f3;
+        --pink-200: #fbcfe8;
+        --pink-300: #f9a8d4;
+        --pink-400: #f472b6;
+        --pink-500: #ec4899;
+        --pink-600: #db2777;
+        --pink-700: #be185d;
+        --pink-800: #9d174d;
+        --pink-900: #831843;
+        --purple-100: #f3e8ff;
+        --purple-200: #e9d5ff;
+        --purple-300: #d8b4fe;
+        --purple-400: #c084fc;
+        --purple-500: #a855f7;
+        --purple-600: #9333ea;
+        --purple-700: #7e22ce;
+        --purple-800: #6b21a8;
+        --purple-900: #581c87;
     }
     
-    .card:hover {
+    .background-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -2;
+        background: linear-gradient(135deg, rgba(86, 8, 255, 0.2) 0%, rgba(42, 0, 101, 0.945) 100%);
+        animation: gradientShift 15s ease infinite;
+        background-size: 200% 200%;
+    }
+    
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    .background-image {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -3;
+        opacity: 0.4;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+    
+    /* Sparkle container for background sparkles */
+    .sparkle-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: -1;
+    }
+    
+    .sparkle {
+        position: absolute;
+        background-color: rgba(255, 255, 255, 0.8);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: -1;
+        animation: sparkleFloat 15s linear infinite;
+    }
+    
+    .s1 { top: 20%; left: 10%; width: 3px; height: 3px; animation-delay: 0s; }
+    .s2 { top: 60%; left: 80%; width: 4px; height: 4px; animation-delay: 3s; }
+    .s3 { top: 30%; left: 50%; width: 2px; height: 2px; animation-delay: 6s; }
+    .s4 { top: 80%; left: 30%; width: 3px; height: 3px; animation-delay: 9s; }
+    
+    @keyframes sparkleFloat {
+        0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+    }
+    
+    /* Entry animations */
+    .animate-pop-in {
+        animation: popIn 0.8s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+        opacity: 0;
+    }
+    
+    @keyframes popIn {
+        0% { transform: scale(0.8); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    
+    .animate-slide-up {
+        animation: slideUp 0.8s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    
+    @keyframes slideUp {
+        100% { transform: translateY(0); opacity: 1; }
+    }
+    
+    .animate-fade-in {
+        animation: fadeIn 1s ease forwards;
+        opacity: 0;
+    }
+    
+    @keyframes fadeIn {
+        100% { opacity: 1; }
+    }
+    
+    .glass-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+    
+    .glass-card:hover {
         transform: translateY(-5px);
+        box-shadow: 0 12px 40px 0 rgba(255, 255, 255, 0.2);
     }
     
-    .pricing-card-title {
+    .active-plan {
+        border: 2px solid var(--pink-400) !important;
+        box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.2) !important;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(236, 72, 153, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0); }
+    }
+    
+    .premium-card {
+        background: rgba(236, 72, 153, 0.15) !important;
+    }
+    
+    .plan-badge {
+        display: inline-block;
+        padding: 0.5rem 1.25rem;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    
+    .popular-badge {
+        position: absolute;
+        top: -12px;
+        right: 20px;
+        padding: 0.35rem 1.25rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        z-index: 1;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        animation: bounce 2s infinite;
+    }
+    
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+    
+    .price-display {
         font-size: 2.5rem;
-        font-weight: bold;
+        font-weight: 700;
+        letter-spacing: -1px;
     }
     
-    .list-unstyled li {
-        margin-bottom: 0.5rem;
+    .price-display span {
+        font-size: 1rem;
+        font-weight: normal;
     }
     
-    .current-plan-section .card {
-        background-color: #f8f9fa;
+    .feature-list {
+        list-style: none;
+        padding: 0;
     }
     
-    .table th {
-        background-color: #f8f9fa;
+    .feature-list li {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
     
-    .fas {
-        margin-right: 0.5rem;
+    .plan-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    .header-icon i {
+        margin: 0 8px;
+        font-size: 1.5rem;
+        color: var(--pink-300);
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    .btn-pink-200 {
+        background-color: var(--pink-200);
+        color: var(--pink-800);
+        border: none;
+    }
+    
+    .btn-pink-300 {
+        background-color: var(--pink-300);
+        color: white;
+        border: none;
+    }
+    
+    .btn-pink-500 {
+        background-color: var(--pink-500);
+        color: white;
+        border: none;
+    }
+    
+    .btn-outline-pink-200 {
+        border: 2px solid var(--pink-200);
+        color: var(--pink-200);
+        background-color: transparent;
+    }
+    
+    .btn-outline-pink-200:hover {
+        background-color: var(--pink-200);
+        color: var(--pink-800);
+    }
+    
+    /* Glittery button styles */
+    .subscribe-button-container {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .glittery-btn {
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+        transition: all 0.3s ease;
+    }
+    
+    .glittery-btn:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .glitter {
+        position: absolute;
+        background-color: rgba(255, 255, 255, 0.8);
+        border-radius: 50%;
+        pointer-events: none;
+        animation: glitter 2s linear infinite;
+        z-index: -1;
+    }
+    
+    .glitter:nth-child(1) {
+        width: 10px;
+        height: 10px;
+        top: -5px;
+        left: 20%;
+        animation-delay: 0s;
+    }
+    
+    .glitter:nth-child(2) {
+        width: 8px;
+        height: 8px;
+        top: 50%;
+        left: 60%;
+        animation-delay: 0.5s;
+    }
+    
+    .glitter:nth-child(3) {
+        width: 6px;
+        height: 6px;
+        bottom: -3px;
+        left: 40%;
+        animation-delay: 1s;
+    }
+    
+    @keyframes glitter {
+        0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+        20% { opacity: 1; }
+        80% { opacity: 1; }
+        100% { transform: translateY(50px) rotate(360deg); opacity: 0; }
+    }
+    
+    .btn-pink-gradient {
+        background: linear-gradient(135deg, var(--pink-400) 0%, var(--pink-600) 100%);
+        color: white;
+        border: none;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-purple-gradient {
+        background: linear-gradient(135deg, var(--purple-400) 0%, var(--purple-600) 100%);
+        color: white;
+        border: none;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-pink-gradient:hover, .btn-purple-gradient:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .table-pink {
+        background-color: rgba(255, 255, 255, 0.05);
+        color: white;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .table-pink th, .table-pink td {
+        border-color: rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+    }
+    
+    .table-pink thead th {
+        background-color: rgba(219, 39, 119, 0.2);
+        font-weight: 600;
+    }
+    
+    .text-pink-100 {
+        color: var(--pink-100);
+    }
+    
+    .text-pink-200 {
+        color: var(--pink-200);
+    }
+    
+    .text-pink-300 {
+        color: var(--pink-300);
+    }
+    
+    .text-pink-500 {
+        color: var(--pink-500);
+    }
+    
+    .text-purple-100 {
+        color: var(--purple-100);
+    }
+    
+    .text-purple-300 {
+        color: var(--purple-300);
+    }
+    
+    .bg-pink-200 {
+        background-color: var(--pink-200);
+    }
+    
+    .bg-pink-500 {
+        background-color: var(--pink-500);
+    }
+    
+    .bg-purple-500 {
+        background-color: var(--purple-500);
+    }
+    
+    .savings-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        background-color: rgba(255, 215, 0, 0.2);
+        color: gold;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .price-display {
+            font-size: 2rem;
+        }
+        
+        .popular-badge {
+            right: 10px;
+            font-size: 0.7rem;
+        }
+        
+        .feature-list li {
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+        }
     }
 </style>
 
-<!-- Add custom JavaScript -->
+<!-- Custom JavaScript -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle subscription button clicks
-    const subscribeButtons = document.querySelectorAll('.btn-primary');
-    subscribeButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const planName = this.closest('.card').querySelector('h4').textContent;
-            if (confirm(`Are you sure you want to subscribe to the ${planName} plan?`)) {
-                // Add subscription logic here
-                console.log(`Subscribing to ${planName} plan`);
+    // Add click effect to plan cards
+    const planCards = document.querySelectorAll('.plan-card');
+    
+    planCards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            if (!e.target.closest('a, button')) {
+                const link = this.querySelector('a');
+                if (link) {
+                    link.click();
+                }
             }
         });
     });
+    
+    // Add glitter effect to buttons on hover
+    const glitterBtns = document.querySelectorAll('.glittery-btn');
+    
+    glitterBtns.forEach(btn => {
+        btn.addEventListener('mouseenter', function() {
+            // Create additional glitter particles on hover
+            for (let i = 0; i < 5; i++) {
+                const glitter = document.createElement('span');
+                glitter.className = 'glitter';
+                
+                // Random position
+                const left = Math.random() * 100;
+                const size = Math.random() * 6 + 4;
+                
+                glitter.style.width = `${size}px`;
+                glitter.style.height = `${size}px`;
+                glitter.style.left = `${left}%`;
+                glitter.style.top = `${Math.random() * 100}%`;
+                glitter.style.animationDelay = `${Math.random() * 2}s`;
+                
+                this.appendChild(glitter);
+                
+                // Remove after animation completes
+                setTimeout(() => {
+                    glitter.remove();
+                }, 2000);
+            }
+        });
+    });
+    
+    // Add click animation to buttons
+    const buttons = document.querySelectorAll('button:not(.disabled)');
+    
+    buttons.forEach(button => {
+        button.addEventListener('click', function() {
+            this.classList.add('clicked');
+            setTimeout(() => {
+                this.classList.remove('clicked');
+            }, 300);
+        });
+    });
 });
+
+function showError(message) {
+    const container = document.getElementById('message-container');
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-danger alert-dismissible fade show glass-card';
+    alert.role = 'alert';
+    alert.innerHTML = `
+        <i class="fas fa-exclamation-circle me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    container.prepend(alert);
+    
+    // Auto dismiss after 5 seconds
+    setTimeout(() => {
+        const bsAlert = new bootstrap.Alert(alert);
+        bsAlert.close();
+    }, 5000);
+}
+
+function showSuccess(message) {
+    const container = document.getElementById('message-container');
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-success alert-dismissible fade show glass-card';
+    alert.role = 'alert';
+    alert.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    container.prepend(alert);
+    
+    // Auto dismiss after 5 seconds
+    setTimeout(() => {
+        const bsAlert = new bootstrap.Alert(alert);
+        bsAlert.close();
+    }, 5000);
+}
+
+// Helper function to get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
 </script>
 {% endblock %}

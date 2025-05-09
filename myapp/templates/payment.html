@@ -1,118 +1,715 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    {% load static %}
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Madison Magazine Subscription Payment</title>
-    {% load static %}
-    <link rel="stylesheet" type="text/css" href="{% static 'css/pay.css' %}">
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
 <style>
-        </style>
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-</head>
-<body>
-    <div class="container">
-        <h1>Madison Magazine Payment</h1>
-        <section class="subscription-plans">
-            <div class="plan" onclick="selectPlan('monthly', 499)">
-                <h3>Monthly Plan</h3>
-                <p>₹499 per month</p>
-                <p>Access to premium content</p>
-                <p>Ad-free experience</p>
+    :root {
+        --primary-color: #e83e8c;
+        --primary-dark: #c2185b;
+        --primary-light: #f8bbd0;
+        --secondary-color: #fce4ec;
+        --text-color: #333;
+        --light-text: #777;
+        --white: #fff;
+        --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        --transition: all 0.3s ease;
+    }
+
+    .payment-container {
+        font-family: 'Poppins', sans-serif;
+        background-image: url('https://sdmntprwestus.oaiusercontent.com/files/00000000-d1a8-6230-bcb2-416333bfb2f3/raw?se=2025-05-06T10%3A09%3A10Z&sp=r&sv=2024-08-04&sr=b&scid=6d81bd3b-e06f-52c7-9bf9-7fbaa021e8fc&skoid=b53ae837-f585-4db7-b46f-2d0322fce5a9&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-05-06T03%3A28%3A13Z&ske=2025-05-07T03%3A28%3A13Z&sks=b&skv=2024-08-04&sig=8Y%2BMup4G7MfM%2BZLPp50cr7OMij/B/C594qPo3MwV6Es%3D');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        min-height: 100vh;
+        padding: 20px;
+    }
+
+    .payment-card {
+        width: 100%;
+        max-width: 500px;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        transition: var(--transition);
+        margin: 0 auto;
+    }
+
+    .payment-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        color: var(--white);
+        padding: 25px;
+        text-align: center;
+        position: relative;
+    }
+
+    .payment-header h1 {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .payment-header p {
+        font-size: 14px;
+        opacity: 0.9;
+    }
+
+    .payment-header i {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        font-size: 24px;
+    }
+
+    .payment-form {
+        padding: 30px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: var(--text-color);
+        font-size: 14px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px 15px 12px 40px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        font-size: 14px;
+        transition: var(--transition);
+        background-color: var(--secondary-color);
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px var(--primary-light);
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 15px;
+        top: 38px;
+        color: var(--primary-color);
+    }
+
+    .row {
+        display: flex;
+        gap: 15px;
+    }
+
+    .row .form-group {
+        flex: 1;
+    }
+
+    .btn-pay {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        color: var(--white);
+        border: none;
+        padding: 12px;
+        border-radius: 10px;
+        width: 100%;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: var(--transition);
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .btn-pay:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(232, 62, 140, 0.3);
+    }
+
+    .payment-methods {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin: 20px 0;
+    }
+
+    .payment-method {
+        width: 50px;
+        height: 30px;
+        background-color: var(--white);
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: var(--shadow);
+        padding: 5px;
+    }
+
+    .payment-method img {
+        max-width: 100%;
+        max-height: 100%;
+    }
+
+    .divider {
+        display: flex;
+        align-items: center;
+        margin: 25px 0;
+        color: var(--light-text);
+        font-size: 12px;
+    }
+
+    .divider::before, .divider::after {
+        content: "";
+        flex: 1;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .divider::before {
+        margin-right: 10px;
+    }
+
+    .divider::after {
+        margin-left: 10px;
+    }
+
+    .payment-footer {
+        text-align: center;
+        padding: 15px;
+        font-size: 12px;
+        color: var(--light-text);
+        border-top: 1px solid #eee;
+    }
+
+    .payment-footer a {
+        color: var(--primary-color);
+        text-decoration: none;
+    }
+
+    /* Toast Notification */
+    .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #ff4d6d;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        box-shadow: var(--shadow);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transform: translateX(150%);
+        transition: transform 0.3s ease;
+        z-index: 1000;
+        max-width: 300px;
+    }
+
+    .toast.show {
+        transform: translateX(0);
+    }
+
+    .toast i {
+        font-size: 20px;
+    }
+
+    .toast.success {
+        background-color: #4caf50;
+    }
+
+    /* Feminine touches */
+    .floral-decoration {
+        position: absolute;
+        width: 80px;
+        height: 80px;
+        opacity: 0.1;
+        z-index: -1;
+    }
+
+    .floral-1 {
+        top: 10px;
+        right: 10px;
+        transform: rotate(15deg);
+    }
+
+    .floral-2 {
+        bottom: 10px;
+        left: 10px;
+        transform: rotate(-15deg);
+    }
+
+    .form-control::placeholder {
+        color: #b8b8b8;
+        font-style: italic;
+    }
+
+    .plan-details {
+        background-color: var(--secondary-color);
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+
+    .plan-details h4 {
+        color: var(--primary-dark);
+    }
+
+    .plan-details .lead {
+        font-size: 1.25rem;
+        font-weight: 500;
+        color: var(--primary-color);
+    }
+    .spinner-border {
+        display: none;
+        margin-left: 8px;
+    }
+    .processing .spinner-border {
+        display: inline-block;
+    }
+    .processing .btn-text {
+        display: none;
+    }
+</style>
+
+<div class="payment-container">
+    <div class="payment-card">
+        <div class="payment-header">
+            <i class="fas fa-lock"></i>
+            <h1>Secure Payment</h1>
+            <p>Complete your purchase for {{ plan.name }}</p>
+            <div class="floral-decoration floral-1">
+                <i class="fas fa-heart" style="font-size: 80px;"></i>
             </div>
-            <div class="plan" onclick="selectPlan('yearly', 4999)">
-                <h3>Yearly Plan</h3>
-                <p>₹4999 per year</p>
-                <p>10% discount</p>
-                <p>Access to premium content</p>
-                <p>Exclusive events</p>
+            <div class="floral-decoration floral-2">
+                <i class="fas fa-spa" style="font-size: 80px;"></i>
             </div>
-            <div class="plan" onclick="selectPlan('premium', 7999)">
-                <h3>Premium Plan</h3>
-                <p>₹7999 per year</p>
-                <p>All benefits of Yearly Plan</p>
-                <p>Detailed analytics</p>
+        </div>
+        
+        <div class="payment-form">
+            {% if messages %}
+            <div class="alert-container">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
             </div>
-        </section>
+            {% endif %}
 
-        <section class="payment-details">
-            <h2>Payment Details</h2>
-            <label for="card-number">Card Number</label>
-            <input type="text" id="card-number" placeholder="Enter card number">
-
-            <label for="expiry-date">Expiration Date</label>
-            <input type="text" id="expiry-date" placeholder="MM/YY">
-
-            <label for="cvv">CVV</label>
-            <input type="text" id="cvv" placeholder="Enter CVV">
-        </section>
-
-        <section class="coupon-code">
-            <h2>Apply Coupon Code</h2>
-            <label for="coupon">Coupon Code</label>
-            <input type="text" id="coupon" placeholder="Enter coupon code">
-        </section>
-
-        <section class="payment-button">
-            <button class="pay-now" onclick="payNow()">Pay Now</button>
-            <button class="cancel" onclick="cancelPayment()">Cancel</button>
-        </section>
-
-        <div id="message" class="message" style="display:none;"></div>
+            <div class="plan-details">
+                <h4>{{ plan.name }} Plan</h4>
+                <p class="lead">₹{{ plan.price }} for {{ plan.get_duration_display }}</p>
+                <p>{{ plan.description }}</p>
+            </div>
+            
+            <form id="paymentForm" method="post" action="{% url 'verify_payment' %}">
+                {% csrf_token %}
+                <input type="hidden" id="plan_id" name="plan_id" value="{{ plan.id }}">
+                <input type="hidden" id="plan_name" name="plan_name" value="{{ plan.name }}">
+                <input type="hidden" id="plan_price" name="amount" value="{{ plan.price }}">
+                <input type="hidden" name="currency" value="INR">
+                <input type="hidden" name="description" value="{{ plan.name }} Subscription">
+               
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <i class="fas fa-user input-icon"></i>
+                    <input type="text" id="name" name="fullname" class="form-control" 
+                           placeholder="Enter your full name" value="{{ request.user.get_full_name }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <i class="fas fa-envelope input-icon"></i>
+                    <input type="email" id="email" name="email" class="form-control" 
+                           placeholder="your.email@example.com" value="{{ request.user.email }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <i class="fas fa-phone input-icon"></i>
+                    <input type="tel" id="phone" name="phone" class="form-control" placeholder="+91 9876543210" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="amount">Amount (₹)</label>
+                    <i class="fas fa-rupee-sign input-icon"></i>
+                    <input type="number" id="amount" class="form-control" value="{{ plan.price }}" readonly>
+                </div>
+                
+                <div class="row">
+                    <div class="form-group">
+                        <label for="cardNumber">Card Number</label>
+                        <i class="far fa-credit-card input-icon"></i>
+                        <input type="text" id="cardNumber" class="form-control" placeholder="1234 5678 9012 3456" required>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="form-group">
+                        <label for="expiry">Expiry Date</label>
+                        <i class="far fa-calendar-alt input-icon"></i>
+                        <input type="text" id="expiry" class="form-control" placeholder="MM/YY" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="cvv">CVV</label>
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="text" id="cvv" class="form-control" placeholder="123" required>
+                    </div>
+                </div>
+                
+                <div class="payment-methods">
+                    <div class="payment-method">
+                        <i class="fab fa-cc-visa" style="color: #1a1f71; font-size: 24px;"></i>
+                    </div>
+                    <div class="payment-method">
+                        <i class="fab fa-cc-mastercard" style="color: #eb001b; font-size: 24px;"></i>
+                    </div>
+                    <div class="payment-method">
+                        <i class="fab fa-cc-amex" style="color: #016fd0; font-size: 24px;"></i>
+                    </div>
+                    <div class="payment-method">
+                        <i class="fab fa-cc-discover" style="color: #ff6000; font-size: 24px;"></i>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-pay" id="payButton">
+                    <i class="fas fa-lock"></i> Pay Securely
+                    <div class="spinner-border spinner-border-sm d-none" role="status"></div>
+                </button>
+                
+                <div class="divider">OR</div>
+                
+                <button type="button" class="btn-pay" id="upiButton" style="background: linear-gradient(135deg, #6a11cb, #2575fc);">
+                    <i class="fas fa-mobile-alt"></i> Pay with UPI
+                </button>
+            </form>
+        </div>
+        
+        <div class="payment-footer">
+            <p>Your payment is secured with 256-bit encryption <i class="fas fa-shield-alt"></i></p>
+            <p>By continuing, you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a></p>
+        </div>
     </div>
+    
+    <div id="toast" class="toast">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="toastMessage">Error message here</span>
+    </div>
+</div>
 
-    <script>
-        let selectedPlan = null;
-        let paymentAmount = 0;
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
-        function selectPlan(plan, amount) {
-            selectedPlan = plan;
-            paymentAmount = amount;
-            document.querySelectorAll('.plan').forEach(plan => {
-                plan.classList.remove('selected');
-            });
-            document.querySelector(`.plan:contains('${plan.charAt(0).toUpperCase() + plan.slice(1)}')`).classList.add('selected');
+<script>
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form validation
+        const paymentForm = document.getElementById('paymentForm');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+        
+        // Get plan details from template
+        const planId = document.getElementById('plan_id').value;
+        const planName = document.getElementById('plan_name').value;
+        const planPrice = document.getElementById('plan_price').value;
+        
+        // Validate card number
+        function validateCardNumber(cardNumber) {
+            const regex = /^[0-9]{16}$/;
+            return regex.test(cardNumber.replace(/\s/g, ''));
         }
-
-        function payNow() {
-            if (!selectedPlan) {
-                alert("Please select a subscription plan.");
+        
+        // Validate expiry date
+        function validateExpiry(expiry) {
+            const regex = /^(0[1-9]|1[0-2])\/?([0-9]{2})$/;
+            if (!regex.test(expiry)) return false;
+            
+            const [_, month, year] = expiry.match(regex);
+            const currentYear = new Date().getFullYear() % 100;
+            const currentMonth = new Date().getMonth() + 1;
+            
+            if (parseInt(year) < currentYear) return false;
+            if (parseInt(year) === currentYear && parseInt(month) < currentMonth) return false;
+            
+            return true;
+        }
+        
+        // Validate CVV
+        function validateCVV(cvv) {
+            const regex = /^[0-9]{3,4}$/;
+            return regex.test(cvv);
+        }
+        
+        // Validate phone number
+        function validatePhone(phone) {
+            const regex = /^[0-9]{10,15}$/;
+            return regex.test(phone.replace(/[+\s]/g, ''));
+        }
+        
+        // Show toast message
+        function showToast(message, isSuccess = false) {
+            toastMessage.textContent = message;
+            toast.classList.remove('success');
+            
+            if (isSuccess) {
+                toast.classList.add('success');
+                toast.querySelector('i').className = 'fas fa-check-circle';
+            } else {
+                toast.querySelector('i').className = 'fas fa-exclamation-circle';
+            }
+            
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 5000);
+        }
+        
+        // Format card number
+        document.getElementById('cardNumber').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\s/g, '');
+            if (value.length > 16) {
+                value = value.substring(0, 16);
+            }
+            
+            let formattedValue = '';
+            for (let i = 0; i < value.length; i++) {
+                if (i > 0 && i % 4 === 0) {
+                    formattedValue += ' ';
+                }
+                formattedValue += value[i];
+            }
+            
+            e.target.value = formattedValue;
+        });
+        
+        // Format expiry date
+        document.getElementById('expiry').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 4) {
+                value = value.substring(0, 4);
+            }
+            
+            if (value.length > 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2);
+            }
+            
+            e.target.value = value;
+        });
+        
+        // Handle form submission
+        paymentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form values
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const amount = document.getElementById('amount').value.trim();
+            const cardNumber = document.getElementById('cardNumber').value.trim();
+            const expiry = document.getElementById('expiry').value.trim();
+            const cvv = document.getElementById('cvv').value.trim();
+            
+            // Validate fields
+            if (!name) {
+                showToast('Please enter your full name');
                 return;
             }
             
-            let options = {
-                "key": "YOUR_RAZORPAY_API_KEY",
-                "amount": paymentAmount * 100,
-                "currency": "INR",
-                "name": "Madison Magazine",
-                "description": "Subscription Payment",
-                "handler": function (response) {
-                    document.getElementById('message').innerHTML = "Payment successful! Transaction ID: " + response.razorpay_payment_id;
-                    document.getElementById('message').className = "message success";
-                    document.getElementById('message').style.display = "block";
+            if (!email || !email.includes('@')) {
+                showToast('Please enter a valid email address');
+                return;
+            }
+            
+            if (!validatePhone(phone)) {
+                showToast('Please enter a valid phone number');
+                return;
+            }
+            
+            if (!amount || isNaN(amount) || parseFloat(amount) < 1) {
+                showToast('Please enter a valid amount (minimum ₹1)');
+                return;
+            }
+            
+            if (!validateCardNumber(cardNumber)) {
+                showToast('Please enter a valid 16-digit card number');
+                return;
+            }
+            
+            if (!validateExpiry(expiry)) {
+                showToast('Please enter a valid expiry date (MM/YY)');
+                return;
+            }
+            
+            if (!validateCVV(cvv)) {
+                showToast('Please enter a valid CVV (3 or 4 digits)');
+                return;
+            }
+            
+            // If all validations pass, proceed with Razorpay payment
+            initiateRazorpayPayment(name, email, phone, amount);
+        });
+        
+        // UPI button click handler
+        document.getElementById('upiButton').addEventListener('click', function() {
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const amount = document.getElementById('amount').value.trim();
+            
+            // Validate required fields for UPI
+            if (!name) {
+                showToast('Please enter your full name');
+                return;
+            }
+            
+            if (!email || !email.includes('@')) {
+                showToast('Please enter a valid email address');
+                return;
+            }
+            
+            if (!validatePhone(phone)) {
+                showToast('Please enter a valid phone number');
+                return;
+            }
+            
+            if (!amount || isNaN(amount) || parseFloat(amount) < 1) {
+                showToast('Please enter a valid amount (minimum ₹1)');
+                return;
+            }
+            
+            initiateUPIPayment(name, email, phone, amount);
+        });
+        
+        // Initialize Razorpay payment
+        function initiateRazorpayPayment(name, email, phone, amount) {
+    fetch(`/create_order/${planId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const options = {
+                key: data.key,
+                amount: data.amount,
+                currency: data.currency,
+                order_id: data.order_id,
+                name: 'Madison',
+                description: `Payment for ${planName} subscription`,
+                handler: function(response) {
+                    showToast('Payment successful! Activating subscription...', true);
+                    processSubscription(
+                        response.razorpay_payment_id,
+                        response.razorpay_order_id,
+                        response.razorpay_signature
+                    );
                 },
-                "modal": {
-                    "ondismiss": function(){
-                        document.getElementById('message').innerHTML = "Payment cancelled.";
-                        document.getElementById('message').className = "message error";
-                        document.getElementById('message').style.display = "block";
-                    }
-                },
-                "prefill": {
-                    "email": "johndoe@example.com"
-                }
+                prefill: { name, email, contact: phone },
+                theme: { color: '#e83e8c' }
             };
-
-            let razorpay = new Razorpay(options);
-            razorpay.open();
+            new Razorpay(options).open();
+        } else {
+            showToast('Error creating order: ' + data.error);
         }
-
-        function cancelPayment() {
-            document.getElementById('message').innerHTML = "Payment cancelled.";
-            document.getElementById('message').className = "message error";
-            document.getElementById('message').style.display = "block";
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error initiating payment');
+    });
+}
+        
+        // Simulate UPI payment
+        function initiateUPIPayment(name, email, phone, amount) {
+            showToast('Redirecting to UPI payment...', true);
+            
+            // Simulate UPI payment with a delay
+            setTimeout(() => {
+                // Generate a random payment ID for simulation
+                const paymentId = 'upi_' + Math.random().toString(36).substring(2, 15);
+                
+                showToast('UPI payment successful! Activating your subscription...', true);
+                
+                // Process the subscription activation with simulated UPI payment
+                processSubscription(
+                    paymentId,
+                    'upi_order_' + Math.random().toString(36).substring(2, 15),
+                    'upi_signature_' + Math.random().toString(36).substring(2, 15)
+                );
+            }, 2000);
         }
-    </script>
-</body>
-</html>
+        
+        // Process subscription activation after payment
+function processSubscription(paymentId, orderId, signature) {
+    const formData = new FormData();
+    formData.append('razorpay_payment_id', paymentId);
+    formData.append('razorpay_order_id', orderId);
+    formData.append('razorpay_signature', signature);
+    formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+
+    showToast('Finalizing your subscription...', true);
+    
+    fetch('/verify_payment/', {
+        method: 'POST',
+        body: formData,
+        headers: { 
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            window.location.href = data.redirect_url;
+        } else {
+            window.location.href = data.redirect_url || reverse('subscription') + '?payment=failed';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        window.location.href = reverse('subscription') + '?payment=error';
+    });
+}
+// Add loading state management
+function setLoadingState(button, isLoading) {
+    button.classList.toggle('processing', isLoading);
+    button.disabled = isLoading;
+}
+        // Helper function to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+    
+</script>
+
+{% endblock %}

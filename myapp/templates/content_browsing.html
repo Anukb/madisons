@@ -16,7 +16,7 @@
         <div class="article">
             <h3>{{ article.title }}</h3>
             <p>{{ article.description }}</p>
-            <a href="{% url 'article_detail' article.id %}">Read more</a>
+            <a href="{% url 'article_detail' article_id=article.id slug=article.slug %}">Read more</a>
         </div>
     {% empty %}
         <p>No articles found.</p>
