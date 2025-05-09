@@ -23,7 +23,7 @@
                 <div class="recommendation-info">
                     <h3>{{ article.title|default:"Untitled" }}</h3>
                     <p>{{ article.description|default:"No description available"|truncatewords:20 }}</p>
-                    <a href="{% url 'article_detail' article.id %}" class="read-more">Read more</a>
+                    <a href="{% url 'article_detail' article.id article.slug %}" class="read-more">Read more</a>
                 </div>
             </div>
         {% empty %}

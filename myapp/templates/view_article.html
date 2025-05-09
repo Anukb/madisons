@@ -6,159 +6,442 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View Articles - Madison Online Magazine</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* Basic styling */
-        body {
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #ffeef8; /* Light pink background */
+        :root {
+            --neon-pink: #ff4d94;
+            --neon-purple: #c04cfd;
+            --neon-blue: #4dccff;
+            --neon-yellow: #fff44f;
+            --glitter: linear-gradient(135deg, 
+                rgba(255,255,255,0.8) 0%, 
+                rgba(255,255,255,0) 20%, 
+                rgba(255,255,255,0) 80%, 
+                rgba(255,255,255,0.8) 100%);
+            --holographic: linear-gradient(45deg, 
+                rgba(255,77,148,0.2) 0%, 
+                rgba(192,76,253,0.2) 25%, 
+                rgba(77,204,255,0.2) 50%, 
+                rgba(255,244,79,0.2) 75%, 
+                rgba(255,77,148,0.2) 100%);
         }
 
-        /* Fixed Top Navigation Bar */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0a0a0a;
+            color: #fff;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(255,77,148,0.15) 0%, transparent 25%),
+                radial-gradient(circle at 80% 70%, rgba(77,204,255,0.15) 0%, transparent 25%),
+                var(--holographic);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: var(--glitter);
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.1;
+        }
+
+        /* Floating sparkles animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
+        }
+
+        .sparkle {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            background-color: white;
+            border-radius: 50%;
+            filter: blur(1px);
+            pointer-events: none;
+            z-index: -1;
+            animation: float 3s infinite ease-in-out;
+        }
+
+        /* Top Navigation Bar - Neon Glassmorphism */
         .top-nav {
             width: 100%;
-            background-color: #333;
+            background: rgba(10, 10, 10, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             color: white;
             overflow: hidden;
-            padding: 10px 0;
+            padding: 15px 0;
             position: fixed;
             top: 0;
             display: flex;
             justify-content: flex-end;
             z-index: 1001;
-        }
-        .top-nav a {
-            padding: 10px 15px;
-            color: #ddd;
-            text-decoration: none;
-            font-size: 18px;
-        }
-        .top-nav a:hover {
-            color: #fff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 30px rgba(255, 77, 148, 0.1);
         }
 
-        /* Sidebar styling */
+        .top-nav a {
+            padding: 10px 20px;
+            color: #ddd;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 500;
+            margin: 0 5px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .top-nav a i {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+
+        .top-nav a:hover {
+            color: #fff;
+            background: rgba(255, 77, 148, 0.2);
+            text-shadow: 0 0 10px var(--neon-pink);
+        }
+
+        /* Sidebar - Holographic Effect */
         .sidebar {
             height: 100%;
-            width: 250px;
+            width: 280px;
             position: fixed;
             top: 0;
-            left: -250px;
-            background-color: #333;
+            left: -280px;
+            background: rgba(10, 10, 10, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
             color: white;
-            transition: 0.3s;
-            padding-top: 60px;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            padding-top: 80px;
             z-index: 1000;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 30px rgba(255, 77, 148, 0.2);
         }
+
+        .sidebar::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--holographic);
+            opacity: 0.1;
+            z-index: -1;
+        }
+
         .sidebar a {
-            padding: 10px 20px;
+            padding: 15px 30px;
             text-decoration: none;
-            font-size: 18px;
+            font-size: 16px;
             color: #ddd;
-            display: block;
-            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            margin: 5px 0;
+            position: relative;
+            overflow: hidden;
         }
+
+        .sidebar a i {
+            margin-right: 15px;
+            font-size: 18px;
+        }
+
         .sidebar a:hover {
-            background-color: #575757;
-            color: white;
+            color: #fff;
+            background: rgba(255, 77, 148, 0.2);
+            padding-left: 35px;
+        }
+
+        .sidebar a:hover::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: linear-gradient(to bottom, var(--neon-pink), var(--neon-purple));
+        }
+
+        /* Close button in sidebar */
+        .sidebar a:first-child {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            width: auto;
+            padding: 8px 15px;
+            border-radius: 20px;
+            background: rgba(255, 77, 148, 0.3);
+        }
+
+        .sidebar a:first-child:hover {
+            background: rgba(255, 77, 148, 0.5);
         }
 
         /* Hamburger menu styling */
         .hamburger {
-            position: absolute;
-            top: 15px;
-            left: 15px;
+            position: fixed;
+            top: 20px;
+            left: 20px;
             font-size: 24px;
             cursor: pointer;
             color: white;
             z-index: 1001;
+            background: rgba(255, 77, 148, 0.5);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(255, 77, 148, 0.3);
         }
 
-        /* Content overlay effect without shifting */
+        .hamburger:hover {
+            background: rgba(255, 77, 148, 0.7);
+            transform: scale(1.1);
+        }
+
+        /* Sidebar open state */
         .overlay-active #mySidebar {
             left: 0;
         }
 
+        .overlay-active .hamburger {
+            transform: translateX(250px) rotate(90deg);
+        }
+
         /* Main content with offset for fixed header */
         .main-content {
-            margin-top: 60px; /* Offset for fixed top bar */
-            padding: 20px;
+            margin-top: 80px;
+            padding: 30px;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Header styling */
+        header {
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, var(--neon-pink), var(--neon-purple), var(--neon-blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 20px rgba(255, 77, 148, 0.3);
+            position: relative;
+            display: inline-block;
+        }
+
+        header h1::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(to right, var(--neon-pink), var(--neon-blue));
+            border-radius: 3px;
         }
 
         /* Article list styling with CSS Grid */
         .articles-list {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive grid */
-            gap: 20px; /* Space between articles */
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
         }
 
+        /* Article card - Glassmorphism with Holographic Border */
         .article-card {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 15px;
-            transition: transform 0.3s;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .article-card::before {
+            content: "";
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, 
+                var(--neon-pink), 
+                var(--neon-purple), 
+                var(--neon-blue), 
+                var(--neon-yellow));
+            background-size: 400%;
+            z-index: -1;
+            border-radius: 16px;
+            opacity: 0;
+            transition: 0.5s;
+            animation: animate 8s linear infinite;
+        }
+
+        @keyframes animate {
+            0% { background-position: 0 0; }
+            50% { background-position: 300% 0; }
+            100% { background-position: 0 0; }
         }
 
         .article-card:hover {
-            transform: scale(1.02);
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(255, 77, 148, 0.3);
+        }
+
+        .article-card:hover::before {
+            opacity: 1;
+            filter: blur(5px);
         }
 
         .article-card img {
             width: 100%;
-            height: 200px;
+            height: 220px;
             object-fit: cover;
-            border-radius: 8px;
+            transition: transform 0.5s ease;
+        }
+
+        .article-card:hover img {
+            transform: scale(1.05);
         }
 
         .article-content {
-            margin: 15px 0;
+            padding: 25px;
         }
 
+        .article-content h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .article-content p {
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        /* Read More Button - Neon Effect */
         .read-more {
-            display: inline-block;
-            padding: 10px 15px;
-            background-color: #ff4d94;
+            display: inline-flex;
+            align-items: center;
+            padding: 12px 25px;
+            background: linear-gradient(45deg, var(--neon-pink), var(--neon-purple));
             color: white;
             text-decoration: none;
-            border-radius: 4px;
-            transition: background-color 0.3s;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(255, 77, 148, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .read-more i {
+            margin-left: 8px;
+            transition: transform 0.3s ease;
         }
 
         .read-more:hover {
-            background-color: #ff1a66;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 77, 148, 0.6);
         }
 
-        footer {
-            text-align: center;
-            padding: 20px 0;
-            background-color: #d10047;
-            color: white;
+        .read-more:hover i {
+            transform: translateX(5px);
         }
 
+        .read-more::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .read-more:hover::before {
+            left: 100%;
+        }
+
+        /* Summary Icon - Sparkle Effect */
         .summary-icon {
-            font-size: 18px;
+            font-size: 20px;
             cursor: pointer;
-            color: #ff6b81;
+            color: var(--neon-yellow);
             margin-left: 10px;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 10px var(--neon-yellow);
         }
 
+        .summary-icon:hover {
+            transform: rotate(15deg) scale(1.2);
+            text-shadow: 0 0 20px var(--neon-yellow);
+        }
+
+        /* Popup Modal - Glassmorphism */
         .popup {
             display: none;
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: #ffe4e1;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            width: 300px;
+            background: rgba(10, 10, 10, 0.9);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 50px rgba(255, 77, 148, 0.5);
+            width: 400px;
+            max-width: 90%;
             text-align: center;
-            font-family: 'Arial', sans-serif;
+            z-index: 1002;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -60%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
         }
 
         .popup-content {
@@ -167,56 +450,163 @@
 
         .close {
             position: absolute;
-            top: 5px;
-            right: 10px;
-            font-size: 20px;
+            top: -10px;
+            right: -10px;
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 77, 148, 0.7);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            border: none;
+        }
+
+        .close:hover {
+            background: rgba(255, 77, 148, 1);
+            transform: rotate(90deg);
         }
 
         .heart-box {
-            background: white;
-            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px 25px;
             border-radius: 50px;
             display: inline-block;
-            font-size: 18px;
-            color: #ff6b81;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(255, 77, 148, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .heart-box h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            background: linear-gradient(45deg, var(--neon-pink), var(--neon-blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin: 0;
+        }
+
+        #summaryText {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+            margin-top: 15px;
+            text-align: left;
+        }
+
+        /* Footer - Neon Gradient */
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 50px;
+            background: linear-gradient(45deg, rgba(255, 77, 148, 0.1), rgba(77, 204, 255, 0.1));
+            position: relative;
+            overflow: hidden;
+        }
+
+        footer::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(to right, var(--neon-pink), var(--neon-blue));
+        }
+
+        footer p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        /* No articles message */
+        .no-articles {
+            text-align: center;
+            padding: 50px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            margin: 50px auto;
+            max-width: 600px;
+        }
+
+        .no-articles p {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .articles-list {
+                grid-template-columns: 1fr;
+            }
+            
+            header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .top-nav a span {
+                display: none;
+            }
+            
+            .top-nav a i {
+                margin-right: 0;
+                font-size: 20px;
+            }
+            
+            header h1 {
+                font-size: 2rem;
+            }
         }
     </style>
 </head>
 <body>
 
-<!-- Background overlay -->
-<div class="overlay"></div>
+<!-- Background sparkles -->
+<div class="sparkle" style="top: 20%; left: 10%; animation-delay: 0s;"></div>
+<div class="sparkle" style="top: 70%; left: 80%; animation-delay: 1s;"></div>
+<div class="sparkle" style="top: 40%; left: 60%; animation-delay: 2s;"></div>
+<div class="sparkle" style="top: 80%; left: 30%; animation-delay: 1.5s;"></div>
+<div class="sparkle" style="top: 30%; left: 90%; animation-delay: 0.5s;"></div>
 
 <!-- Top Navigation Bar -->
 <div class="top-nav">
     {% if user.is_authenticated %}
-        <a href="{% url 'home' %}"><i class="fas fa-home"></i> Home</a>
-        <a href="{% url 'profile' %}"><i class="fas fa-user"></i> Profile</a>
-        <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        <a href="{% url 'home' %}"><i class="fas fa-home"></i> <span>Home</span></a>
+        <a href="{% url 'profile' %}"><i class="fas fa-user"></i> <span>Profile</span></a>
+        <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
     {% else %}
-        <a href="{% url 'home' %}"><i class="fas fa-home"></i> Home</a>
-        <a href="{% url 'register' %}"><i class="fas fa-user-plus"></i> Register</a>
-        <a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Login</a>
+        <a href="{% url 'home' %}"><i class="fas fa-home"></i> <span>Home</span></a>
+        <a href="{% url 'register' %}"><i class="fas fa-user-plus"></i> <span>Register</span></a>
+        <a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> <span>Login</span></a>
     {% endif %}
 </div>
 
 <!-- Sidebar and Hamburger Menu -->
 <div class="hamburger" onclick="toggleSidebar()">
-    <i class="fas fa-bars"></i> <!-- Hamburger menu icon -->
+    <i class="fas fa-bars"></i>
 </div>
 
 <div id="mySidebar" class="sidebar">
-    <a href="javascript:void(0)" onclick="toggleSidebar()">Close &times;</a>
+    <a href="javascript:void(0)" onclick="toggleSidebar()"><i class="fas fa-times"></i></a>
     <a href="{% url 'add_article' %}"><i class="fas fa-plus"></i> Add Article</a>
     <a href="{% url 'view_articles' %}"><i class="fas fa-eye"></i> View Articles</a>
 </div>
 
-<!-- Main content with overlay effect when sidebar is open -->
+<!-- Main content -->
 <div id="mainContent" class="main-content">
     <header>
         <div class="container">
-            <h1>Articles</h1>
+            <h1 class="animate__animated animate__fadeInDown">Articles</h1>
         </div>
     </header>
 
@@ -224,24 +614,29 @@
         {% if articles %}
             <div class="articles-list">
                 {% for article in articles %}
-                    <article class="article-card">
+                    <article class="article-card animate__animated animate__fadeInUp" 
+                             data-animation-delay="{{ forloop.counter0|divisibleby:2|yesno:"0.1s,0.3s" }}">
                         {% if article.image %}
                             <img src="{{ article.image.url }}" alt="{{ article.title }}">
                         {% else %}
                             <img src="{% static 'images/default-article.jpg' %}" alt="Default Article Image">
                         {% endif %}
-                        <h2>{{ article.title }} <span class="summary-icon" data-article-id="{{ article.id }}" onclick="showSummary(this)">🗨️</span></h2>
-                        <p class="article-content">{{ article.description|truncatewords:30 }}</p>
-                        <a class="read-more" href="{% url 'article_detail' article.id %}">Read more</a>
+                        <div class="article-content">
+                            <h2>{{ article.title }} <span class="summary-icon" data-article-id="{{ article.id }}" onclick="showSummary(this)">✨</span></h2>
+                            <p>{{ article.description|truncatewords:30 }}</p>
+                            <a class="read-more" href="{% url 'article_detail' article_id=article.id slug=article.slug %}">Read more <i class="fas fa-arrow-right"></i></a>
+                        </div>
                     </article>
                 {% endfor %}
             </div>
         {% else %}
-            <p>No articles found.</p>
+            <div class="no-articles animate__animated animate__fadeIn">
+                <p>No articles found. Be the first to create one!</p>
+            </div>
         {% endif %}
     </main>
 
-    <footer>
+    <footer class="animate__animated animate__fadeInUp">
         <div class="container">
             <p>&copy; {{ year }} Madison Online Magazine</p>
         </div>
@@ -251,22 +646,48 @@
 <!-- Popup Modal -->
 <div id="summaryPopup" class="popup">
     <div class="popup-content">
-        <span class="close" onclick="closePopup()">&times;</span>
+        <button class="close" onclick="closePopup()">&times;</button>
         <div class="heart-box">
-            <h3>Madison ❤️</h3>
+            <h3>Madison ✨</h3>
         </div>
         <p id="summaryText"></p>
     </div>
 </div>
 
 <script>
+    // Create additional sparkles dynamically
+    function createSparkles() {
+        const body = document.body;
+        const sparkleCount = 15;
+        
+        for (let i = 0; i < sparkleCount; i++) {
+            const sparkle = document.createElement('div');
+            sparkle.className = 'sparkle';
+            sparkle.style.left = `${Math.random() * 100}%`;
+            sparkle.style.top = `${Math.random() * 100}%`;
+            sparkle.style.width = `${Math.random() * 6 + 4}px`;
+            sparkle.style.height = sparkle.style.width;
+            sparkle.style.animationDelay = `${Math.random() * 3}s`;
+            sparkle.style.animationDuration = `${Math.random() * 3 + 2}s`;
+            body.appendChild(sparkle);
+        }
+    }
+    
+    // Toggle sidebar
     function toggleSidebar() {
         document.body.classList.toggle("overlay-active");
     }
 
+    // Show summary popup
     function showSummary(element) {
-        let articleText = element.parentElement.querySelector('.article-content').innerText;
+        let articleText = element.parentElement.nextElementSibling.innerText;
         
+        // Show loading state
+        document.getElementById("summaryText").innerText = "Generating sparkly summary...";
+        document.getElementById("summaryPopup").style.display = "block";
+        
+        // Simulate API call with timeout for demo
+        setTimeout(() => {
         fetch('/generate-summary', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -274,14 +695,60 @@
         })
         .then(response => response.json())
         .then(data => {
-            document.getElementById("summaryText").innerText = data.summary;
-            document.getElementById("summaryPopup").style.display = "block";
-        });
+                document.getElementById("summaryText").innerText = data.summary || "Here's a quick summary: " + articleText.substring(0, 150) + "...";
+            })
+            .catch(() => {
+                document.getElementById("summaryText").innerText = "Here's a quick preview: " + articleText.substring(0, 150) + "...";
+            });
+        }, 800);
     }
 
+    // Close popup
     function closePopup() {
         document.getElementById("summaryPopup").style.display = "none";
     }
+    
+    // Apply animation delays
+    document.querySelectorAll('.article-card[data-animation-delay]').forEach(card => {
+        card.style.animationDelay = card.dataset.animationDelay;
+    });
+
+    // Initialize sparkles when page loads
+    window.addEventListener('DOMContentLoaded', createSparkles);
+    // article_detail.html - Tracking script
+document.addEventListener('DOMContentLoaded', function() {
+    const startTime = new Date();
+    let maxScrollDepth = 0;
+    
+    // Track scroll depth
+    window.addEventListener('scroll', function() {
+        const scrollHeight = document.body.scrollHeight;
+        const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+        const clientHeight = document.documentElement.clientHeight;
+        const currentScrollDepth = (scrollTop + clientHeight) / scrollHeight * 100;
+        maxScrollDepth = Math.max(maxScrollDepth, currentScrollDepth);
+    });
+    
+    // When leaving the page, send data to server
+    window.addEventListener('beforeunload', function() {
+        const endTime = new Date();
+        const timeSpent = (endTime - startTime) / 1000; // in seconds
+        
+        // Send data via AJAX
+        fetch(window.location.href, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: `scroll_depth=${maxScrollDepth}&session_id=${sessionId}`
+        });
+    });
+    
+    function getCookie(name) {
+        // Standard Django CSRF token cookie retrieval
+    }
+});
 </script>
 
 </body>

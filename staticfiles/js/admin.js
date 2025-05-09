@@ -1,452 +1,425 @@
-// Initialize GSAP
-gsap.registerPlugin(ScrollTrigger);
-
-// DOM Elements
-const sidebar = document.querySelector('.admin-sidebar');
-const mainContent = document.querySelector('.admin-main');
-const sidebarToggle = document.querySelector('.sidebar-toggle');
-const searchInput = document.querySelector('.search-bar input');
-const notificationBtn = document.querySelector('.notification-btn');
-const userProfile = document.querySelector('.user-profile');
-const statsCards = document.querySelectorAll('.stats-card');
-const meshGradient = document.querySelector('.mesh-gradient');
-
-// Sidebar Toggle
-function toggleSidebar() {
-    sidebar.classList.toggle('active');
-    mainContent.style.marginLeft = sidebar.classList.contains('active') ? '280px' : '0';
-}
-
-// Notification Animation
-function animateNotification() {
-    gsap.to(notificationBtn, {
-        scale: 1.2,
-        duration: 0.2,
-        yoyo: true,
-        repeat: 1
-    });
-}
-
-// Stats Cards Animation
-function animateStatsCards() {
-    statsCards.forEach((card, index) => {
-        gsap.from(card, {
-            scrollTrigger: {
-                trigger: card,
-                start: 'top bottom-=100',
-                toggleActions: 'play none none reverse'
-            },
-            y: 50,
-            opacity: 0,
-            duration: 0.8,
-            delay: index * 0.2
-        });
-    });
-}
-
-// Mesh Gradient Animation
-function animateMeshGradient() {
-    gsap.to(meshGradient, {
-        backgroundPosition: '200% 200%',
-        duration: 20,
-        repeat: -1,
-        ease: 'none'
-    });
-}
-
-// Search Input Animation
-function initSearchAnimation() {
-    searchInput.addEventListener('focus', () => {
-        gsap.to(searchInput, {
-            width: '+=50',
-            duration: 0.3,
-            ease: 'power2.out'
-        });
-    });
-
-    searchInput.addEventListener('blur', () => {
-        gsap.to(searchInput, {
-            width: '-=50',
-            duration: 0.3,
-            ease: 'power2.in'
-        });
-    });
-}
-
-// Particle System
-function initParticleSystem() {
-    particlesJS('particles-js', {
-        particles: {
-            number: {
-                value: 80,
-                density: {
-                    enable: true,
-                    value_area: 800
-                }
-            },
-            color: {
-                value: '#6c63ff'
-            },
-            shape: {
-                type: 'circle'
-            },
-            opacity: {
-                value: 0.5,
-                random: false
-            },
-            size: {
-                value: 3,
-                random: true
-            },
-            line_linked: {
-                enable: true,
-                distance: 150,
-                color: '#6c63ff',
-                opacity: 0.2,
-                width: 1
-            },
-            move: {
-                enable: true,
-                speed: 2,
-                direction: 'none',
-                random: false,
-                straight: false,
-                out_mode: 'out',
-                bounce: false
-            }
-        },
-        interactivity: {
-            detect_on: 'canvas',
-            events: {
-                onhover: {
-                    enable: true,
-                    mode: 'grab'
-                },
-                resize: true
-            },
-            modes: {
-                grab: {
-                    distance: 140,
-                    line_linked: {
-                        opacity: 0.5
-                    }
-                }
-            }
-        },
-        retina_detect: true
-    });
-}
-
-// Chart Animations
-function initCharts() {
-    // Activity Overview Chart
-    const ctx = document.getElementById('activityChart').getContext('2d');
-    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-    gradient.addColorStop(0, 'rgba(108, 99, 255, 0.2)');
-    gradient.addColorStop(1, 'rgba(108, 99, 255, 0)');
-
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            datasets: [{
-                label: 'User Activity',
-                data: [65, 59, 80, 81, 56, 85],
-                fill: true,
-                backgroundColor: gradient,
-                borderColor: '#6c63ff',
-                tension: 0.4,
-                pointBackgroundColor: '#6c63ff',
-                pointBorderColor: '#fff',
-                pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: '#6c63ff'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.1)'
-                    },
-                    ticks: {
-                        color: '#a0a0a0'
-                    }
-                },
-                x: {
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.1)'
-                    },
-                    ticks: {
-                        color: '#a0a0a0'
-                    }
-                }
-            }
-        }
-    });
-}
-
-// Hover Effects
-function initHoverEffects() {
-    const cards = document.querySelectorAll('.stats-card');
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all components
+    initNavigation();
+    initCharts();
+    initCalendar();
+    initEventHandlers();
+    init3DEffects();
+    initSparkleEffects();
+    initDynamicBackground();
+    initFormValidations();
     
-    cards.forEach(card => {
-        card.addEventListener('mouseenter', () => {
-            gsap.to(card, {
-                y: -10,
-                duration: 0.3,
-                ease: 'power2.out'
-            });
+    // Show dashboard by default
+    document.querySelector('.nav-link[href="#dashboard"]').click();
+});
+
+function initNavigation() {
+    const navLinks = document.querySelectorAll('.admin-sidebar .nav-link');
+    const contentSections = document.querySelectorAll('.content-section');
+    const sidebarToggle = document.querySelector('.sidebar-toggle');
+    
+    // Handle sidebar toggle for mobile
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', () => {
+            document.querySelector('.admin-sidebar').classList.toggle('show');
+            addSparkleEffect(sidebarToggle);
+        });
+    }
+    
+    // Handle navigation clicks
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            // Remove active class from all links and sections
+            navLinks.forEach(l => l.classList.remove('active'));
+            contentSections.forEach(s => s.classList.remove('active'));
+            
+            // Add active class to clicked link
+            link.classList.add('active');
+            
+            // Show corresponding section with animation
+            const targetId = link.getAttribute('href').substring(1);
+            const targetSection = document.getElementById(targetId);
+            targetSection.classList.add('active');
+            
+            // Add sparkle effect to the clicked nav item
+            addSparkleEffect(link);
+            
+            // Close sidebar on mobile after selection
+            if (window.innerWidth < 992) {
+                document.querySelector('.admin-sidebar').classList.remove('show');
+            }
+        });
+    });
+}
+
+function initCharts() {
+    // User Growth Chart (Line Chart)
+    const userCtx = document.getElementById('userGrowthChart');
+    if (userCtx) {
+        new Chart(userCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                datasets: [{
+                    label: 'New Users',
+                    data: [120, 190, 170, 220, 300, 280, 400],
+                    borderColor: '#ff2d75',
+                    borderWidth: 3,
+                    backgroundColor: 'rgba(255, 45, 117, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#ff2d75',
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#ffffff',
+                            font: {
+                                size: 14
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(255,255,255,0.1)'
+                        },
+                        ticks: {
+                            color: '#d8b4fe'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(255,255,255,0.1)'
+                        },
+                        ticks: {
+                            color: '#d8b4fe'
+                        },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    // Content Distribution Chart (Doughnut)
+    const contentCtx = document.getElementById('contentDistributionChart');
+    if (contentCtx) {
+        new Chart(contentCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Products', 'Blog Posts', 'Reviews', 'Comments'],
+                datasets: [{
+                    data: [35, 25, 20, 20],
+                    backgroundColor: [
+                        '#ff2d75',
+                        '#9d00ff',
+                        '#ff6b6b',
+                        '#51cf66'
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 20
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            color: '#ffffff',
+                            font: {
+                                size: 12
+                            },
+                            padding: 20
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
+
+function initCalendar() {
+    const calendarEl = document.getElementById('adminCalendar');
+    if (calendarEl) {
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            themeSystem: 'bootstrap5',
+            events: [
+                {
+                    title: 'Team Meeting',
+                    start: new Date(),
+                    backgroundColor: '#ff2d75',
+                    borderColor: '#ff2d75'
+                },
+                {
+                    title: 'Product Launch',
+                    start: new Date(new Date().setDate(new Date().getDate() + 5)),
+                    backgroundColor: '#9d00ff',
+                    borderColor: '#9d00ff'
+                }
+            ],
+            editable: true,
+            selectable: true,
+            select: function(info) {
+                $('#eventTitle').val('');
+                $('#eventStart').val(info.startStr);
+                $('#eventEnd').val(info.endStr);
+                $('#addEventModal').modal('show');
+            },
+            eventClick: function(info) {
+                $('#eventTitle').val(info.event.title);
+                $('#eventStart').val(info.event.startStr);
+                $('#eventEnd').val(info.event.end ? info.event.endStr : info.event.startStr);
+                $('#eventId').val(info.event.id);
+                $('#addEventModal').modal('show');
+            }
+        });
+        calendar.render();
+    }
+}
+
+function initEventHandlers() {
+    // Event form submission
+    const eventForm = document.getElementById('addEventForm');
+    if (eventForm) {
+        eventForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(eventForm);
+            try {
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                showNotification('Event saved successfully!', 'success');
+                $('#addEventModal').modal('hide');
+                
+                // In a real app, you would refresh the calendar here
+                // document.getElementById('adminCalendar').fullCalendar('refetchEvents');
+            } catch (error) {
+                showNotification('Failed to save event', 'error');
+            }
+        });
+    }
+
+    // Add sparkle effect to all buttons
+    document.querySelectorAll('.btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            addSparkleEffect(this);
+        });
+    });
+
+    // Add hover effects to cards
+    document.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            addSparkleEffect(this);
         });
         
-        card.addEventListener('mouseleave', () => {
-            gsap.to(card, {
-                y: 0,
-                duration: 0.3,
-                ease: 'power2.out'
-            });
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = '';
         });
     });
 }
 
-// Initialize everything
-document.addEventListener('DOMContentLoaded', () => {
-    // Initialize animations and effects
-    animateStatsCards();
-    animateMeshGradient();
-    initSearchAnimation();
-    initParticleSystem();
-    initCharts();
-    initHoverEffects();
-
-    // Event listeners
-    sidebarToggle?.addEventListener('click', toggleSidebar);
-    notificationBtn?.addEventListener('click', animateNotification);
-
-    // Initialize tooltips
-    const tooltips = document.querySelectorAll('[data-tooltip]');
-    tooltips.forEach(tooltip => {
-        tippy(tooltip, {
-            content: tooltip.dataset.tooltip,
-            placement: 'top',
-            animation: 'scale',
-            theme: 'cyber'
-        });
-    });
-});
-
-// Handle page transitions
-document.addEventListener('turbolinks:load', () => {
-    // Reinitialize animations and effects when navigating between pages
-    animateStatsCards();
-    initCharts();
-    initHoverEffects();
-});
-
-// Notification Badge Animation
-const notificationBadge = document.querySelector('.badge');
-if (notificationBadge) {
-    gsap.to(notificationBadge, {
-        scale: 1.2,
-        duration: 0.5,
-        repeat: -1,
-        yoyo: true,
-        ease: 'power1.inOut'
-    });
-}
-
-// Search Bar Animation
-const searchBar = document.querySelector('.search-bar input');
-searchBar.addEventListener('focus', () => {
-    gsap.to(searchBar, {
+function init3DEffects() {
+    // Apply tilt.js to all cards
+    VanillaTilt.init(document.querySelectorAll(".stat-card, .card, .profile-card"), {
+        max: 10,
+        speed: 300,
+        glare: true,
+        "max-glare": 0.1,
         scale: 1.02,
-        duration: 0.3,
-        ease: 'power2.out'
-    });
-});
-
-searchBar.addEventListener('blur', () => {
-    gsap.to(searchBar, {
-        scale: 1,
-        duration: 0.3,
-        ease: 'power2.out'
-    });
-});
-
-// Activity Items Animation
-const activityItems = document.querySelectorAll('.activity-item');
-activityItems.forEach((item, index) => {
-    gsap.from(item, {
-        opacity: 0,
-        y: 20,
-        duration: 0.5,
-        delay: index * 0.1,
-        ease: 'power2.out',
-        scrollTrigger: {
-            trigger: item,
-            start: 'top bottom-=100',
-            toggleActions: 'play none none reverse'
-        }
-    });
-});
-
-// Tooltip Implementation
-const tooltips = document.querySelectorAll('[data-tooltip]');
-tooltips.forEach(element => {
-    tippy(element, {
-        content: element.getAttribute('data-tooltip'),
-        placement: 'top',
-        arrow: true,
-        theme: 'custom-dark'
-    });
-});
-
-// Dark Mode Toggle
-const darkModeToggle = document.querySelector('.dark-mode-toggle');
-if (darkModeToggle) {
-    darkModeToggle.addEventListener('click', () => {
-        document.body.classList.toggle('light-mode');
-        const isDarkMode = !document.body.classList.contains('light-mode');
-        localStorage.setItem('darkMode', isDarkMode);
-    });
-}
-
-// Check for saved dark mode preference
-const savedDarkMode = localStorage.getItem('darkMode');
-if (savedDarkMode === 'false') {
-    document.body.classList.add('light-mode');
-}
-
-// Responsive Navigation
-const menuItems = document.querySelectorAll('.nav-link');
-menuItems.forEach(item => {
-    item.addEventListener('click', () => {
-        if (window.innerWidth <= 768) {
-            sidebar.classList.remove('active');
-        }
-    });
-});
-
-// Window Resize Handler
-let resizeTimeout;
-window.addEventListener('resize', () => {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(() => {
-        if (window.innerWidth > 768) {
-            sidebar.classList.remove('active');
-            mainContent.classList.remove('expanded');
-        }
-    }, 250);
-});
-
-// Initialize Custom Scrollbar
-document.querySelectorAll('.custom-scroll').forEach(element => {
-    new PerfectScrollbar(element, {
-        wheelSpeed: 2,
-        wheelPropagation: true,
-        minScrollbarLength: 20
-    });
-});
-
-// Stats Counter Animation
-const statsNumbers = document.querySelectorAll('.stats-number');
-statsNumbers.forEach(number => {
-    const targetNumber = parseInt(number.textContent);
-    gsap.to(number, {
-        textContent: targetNumber,
-        duration: 2,
-        ease: 'power1.out',
-        snap: { textContent: 1 },
-        scrollTrigger: {
-            trigger: number,
-            start: 'top bottom-=100',
-            toggleActions: 'play none none reverse'
-        }
-    });
-});
-
-// Add loading animation
-const showLoading = () => {
-    const loader = document.createElement('div');
-    loader.className = 'loader';
-    document.body.appendChild(loader);
-    return loader;
-};
-
-const hideLoading = (loader) => {
-    loader.remove();
-};
-
-// API calls with loading state
-const fetchData = async (url) => {
-    const loader = showLoading();
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        throw error;
-    } finally {
-        hideLoading(loader);
-    }
-};
-
-// Error handling
-const showError = (message) => {
-    const errorToast = document.createElement('div');
-    errorToast.className = 'error-toast';
-    errorToast.textContent = message;
-    document.body.appendChild(errorToast);
-
-    gsap.to(errorToast, {
-        opacity: 1,
-        y: 20,
-        duration: 0.3,
-        ease: 'power2.out'
     });
 
-    setTimeout(() => {
-        gsap.to(errorToast, {
-            opacity: 0,
-            y: 0,
-            duration: 0.3,
-            ease: 'power2.in',
-            onComplete: () => errorToast.remove()
+    // Entrance animations for dashboard elements
+    anime({
+        targets: '.stat-card',
+        translateY: [20, 0],
+        opacity: [0, 1],
+        delay: anime.stagger(100),
+        duration: 800,
+        easing: 'easeOutExpo'
+    });
+
+    // Floating animation for stats cards
+    document.querySelectorAll('.stat-card').forEach((card, index) => {
+        anime({
+            targets: card,
+            translateY: [0, -10],
+            duration: 2000 + (index * 200),
+            direction: 'alternate',
+            loop: true,
+            easing: 'easeInOutSine',
+            delay: index * 100
         });
-    }, 3000);
-};
-
-// Handle form submissions
-document.querySelectorAll('form').forEach(form => {
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const loader = showLoading();
-
-        try {
-            const formData = new FormData(form);
-            const response = await fetch(form.action, {
-                method: form.method,
-                body: formData
-            });
-
-            if (!response.ok) {
-                throw new Error('Form submission failed');
-            }
-
-            // Handle success
-            form.reset();
-        } catch (error) {
-            showError(error.message);
-        } finally {
-            hideLoading(loader);
-        }
     });
-});
+}
+
+function initSparkleEffects() {
+    // Add sparkle effect to all navigation links on hover
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('mouseenter', function() {
+            addSparkleEffect(this);
+        });
+    });
+
+    // Add sparkle effect to table rows on hover
+    document.querySelectorAll('.table tr').forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            addSparkleEffect(this);
+        });
+    });
+}
+
+function initDynamicBackground() {
+    // Create dynamic cyber particles in the background
+    const particlesContainer = document.createElement('div');
+    particlesContainer.className = 'cyber-particles';
+    document.body.appendChild(particlesContainer);
+    
+    for (let i = 0; i < 50; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'cyber-particle';
+        
+        // Random properties
+        const size = Math.random() * 4 + 1;
+        const posX = Math.random() * 100;
+        const posY = Math.random() * 100;
+        const delay = Math.random() * 5;
+        const duration = Math.random() * 15 + 10;
+        const color = Math.random() > 0.5 ? 'var(--neon-pink)' : 'var(--neon-purple)';
+        
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.left = `${posX}%`;
+        particle.style.top = `${posY}%`;
+        particle.style.animationDelay = `${delay}s`;
+        particle.style.animationDuration = `${duration}s`;
+        particle.style.backgroundColor = color;
+        
+        particlesContainer.appendChild(particle);
+    }
+}
+
+function initFormValidations() {
+    // Example form validation
+    const forms = document.querySelectorAll('.needs-validation');
+    
+    forms.forEach(form => {
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                // Add sparkle effect to invalid fields
+                form.querySelectorAll(':invalid').forEach(field => {
+                    addSparkleEffect(field, 'error');
+                });
+            }
+            
+            form.classList.add('was-validated');
+        }, false);
+    });
+    
+    // Add validation styling to all form controls
+    document.querySelectorAll('.form-control').forEach(control => {
+        control.addEventListener('input', function() {
+            if (this.checkValidity()) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } else {
+                this.classList.remove('is-valid');
+                this.classList.add('is-invalid');
+            }
+        });
+    });
+}
+
+function addSparkleEffect(element, type = 'default') {
+    const sparkle = document.createElement('div');
+    sparkle.className = 'sparkle';
+    
+    // Position the sparkle randomly within the element
+    const rect = element.getBoundingClientRect();
+    const x = Math.random() * rect.width;
+    const y = Math.random() * rect.height;
+    
+    sparkle.style.left = `${x}px`;
+    sparkle.style.top = `${y}px`;
+    
+    if (type === 'error') {
+        sparkle.style.backgroundColor = 'var(--neon-pink)';
+    }
+    
+    element.appendChild(sparkle);
+    
+    // Remove sparkle after animation completes
+    setTimeout(() => {
+        sparkle.remove();
+    }, 1000);
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show floating`;
+    notification.role = 'alert';
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    const notificationsContainer = document.querySelector('.notifications-container') || createNotificationsContainer();
+    notificationsContainer.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 5000);
+}
+
+function createNotificationsContainer() {
+    const container = document.createElement('div');
+    container.className = 'notifications-container';
+    document.body.appendChild(container);
+    return container;
+}
+
+// Utility function to get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}

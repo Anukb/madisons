@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment Cancelled{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="alert alert-warning text-center" role="alert">
+        <h4 class="alert-heading">Payment Cancelled <i class="fas fa-exclamation-triangle"></i></h4>
+        <p>Your payment process was cancelled. Your subscription has not been changed.</p>
+        <hr>
+        <p class="mb-0">If this was a mistake, you can return to the subscription page and try again.</p>
+    </div>
+    <div class="text-center mt-4">
+        <a href="{% url 'subscription' %}" class="btn btn-primary">Back to Subscriptions</a>
+        <a href="{% url 'home' %}" class="btn btn-secondary">Go to Homepage</a>
+    </div>
+</div>
+{% endblock %} 

@@ -6,7 +6,7 @@ from django.contrib import admin
 from .views import (
     check_username, forgot_password_view, home_view, register,
     login_view, logout_view, profile_view, edit_profile_view,admin_verify_user,
-    admin_login_view, add_category, welcome_notification, reading_history_view,
+    admin_login_view, add_category, welcome_notification, reading_history,
     post_comment,edit_comment, delete_comment, rate_article, submit_rating, notifications_view, get_notifications, mark_notification_read,
     mark_all_notifications_read, search_articles, test_notification, create_announcement,
     test_announcement, generate_summary, edit_article,
@@ -15,8 +15,10 @@ from .views import (
     admin_dashboard, admin_user_management, admin_toggle_user_status,
     admin_content_moderation, admin_handle_complaint, admin_event_management, admin_analytics,
     admin_approve_article, admin_reject_article,
-    edit_category, Articles, recommendations_view,
-    subscription_view
+    edit_category, Articles, recommendations_view,payment_view,subscription_page,
+    subscription_view,  create_order, verify_payment,
+    update_password_view, switch_to_free_plan, start_reading_session, end_reading_session
+
 )
 
 urlpatterns = [
@@ -30,7 +32,7 @@ urlpatterns = [
     path('logout/', logout_view, name='logout'),
     path('profile/', profile_view, name='profile'),
     path('profile/edit/', edit_profile_view, name='edit_profile'),
-    path('custom-admin/login/', admin_login_view, name='admin_login'),
+    path('custom-admin/login/', admin_login_view, name='custom_admin_login'),
     path('custom-admin/dashboard/', admin_dashboard, name='admin_dashboard'),
     path('custom-admin/users/', admin_user_management, name='admin_users'),
     path('custom-admin/users/<int:user_id>/toggle/', admin_toggle_user_status, name='admin_toggle_user'),
@@ -47,9 +49,9 @@ urlpatterns = [
     path('categories/delete/<int:category_id>/', delete_category, name='delete_category'),
     path('add-article/', add_article, name='add_article'),
     path('articles/', view_articles, name='view_articles'),
-    path('article/<int:article_id>/', article_detail, name='article_detail'),
+    path('article/<int:article_id>/<slug:slug>/', article_detail, name='article_detail'),
     path('api/user/profile/', profile_view, name='api_user_profile'),
-    path('account/reading-history/', reading_history_view, name='reading_history'),
+    path('account/reading-history/', reading_history, name='reading_history'),
     path('article/<int:article_id>/comment/', post_comment, name='post_comment'),
     path('comment/edit/<int:comment_id>/', edit_comment, name='edit_comment'),
     path('comment/delete/<int:comment_id>/', delete_comment, name='delete_comment'),
@@ -59,7 +61,7 @@ urlpatterns = [
     path('api/notifications/', get_notifications, name='get_notifications'),
     path('api/notifications/<int:notification_id>/read/', mark_notification_read, name='mark_notification_read'),
     path('api/notifications/mark-all-read/', mark_all_notifications_read, name='mark_all_notifications_read'),
-    path('api/search/', search_articles, name='search_articles'),
+    path('search/', search_articles, name='search_articles'),
     path('test-notification/', test_notification, name='test_notification'),
     path('create-announcement/', create_announcement, name='create_announcement'),
     path('test-announcement/', test_announcement, name='test_announcement'),
@@ -71,6 +73,16 @@ urlpatterns = [
     path('admin/analytics/', analytics_dashboard, name='admin_analytics'),
     path('recommendations/', recommendations_view, name='recommendations'),
     path('subscription/', subscription_view, name='subscription'),
+    path('subscription/create-order/', create_order, name='create_order'),
+    path('subscription/verify-payment/', verify_payment, name='verify_payment'),
+    path('payment/<int:plan_id>/', payment_view, name='payment_view'),
+    path('verify-payment/', verify_payment, name='verify_payment'),
+    path('profile/update-password/', update_password_view, name='update_password'),
+    path('subscription/switch-to-free/', switch_to_free_plan, name='switch_to_free_plan'),
+    path('subscription/', subscription_page, name='subscription'),
+    path('create_order/<int:plan_id>/', create_order, name='create_order'),
+    path('start_reading_session/', start_reading_session, name='start_reading_session'),
+    path('end_reading_session/', end_reading_session, name='end_reading_session'),
 ]
 
 if settings.DEBUG:

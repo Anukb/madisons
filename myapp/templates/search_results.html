@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="search-results-container">
+    <h2>Search Results for "{{ request.GET.query }}"</h2>
+    
+    {% if articles %}
+        <div class="articles-grid">
+            {% for article in articles %}
+                <div class="article-card">
+                    {% if article.image %}
+                        <img src="{{ article.image.url }}" alt="{{ article.title }}">
+                    {% endif %}
+                    <div class="article-content">
+                        <h3>{{ article.title }}</h3>
+                        <p>{{ article.description|truncatewords:30 }}</p>
+                        <div class="article-meta">
+                            <span>By {{ article.author.username }}</span>
+                            <span>{{ article.created_at|date:"M d, Y" }}</span>
+                            <span>{{ article.category.name }}</span>
+                        </div>
+                        <a href="{% url 'article_detail' article.id article.slug %}" class="read-more">Read More</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-results">
+            <p>No articles found matching your search.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

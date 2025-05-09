@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -167,3 +169,13 @@ CACHES = {
 
 # Messages settings
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
+
+# Stripe settings
+STRIPE_PUBLISHABLE_KEY = 'your_publishable_key' # Use environment variable
+STRIPE_SECRET_KEY = 'your_secret_key'         # Use environment variable
+STRIPE_WEBHOOK_SECRET = 'your_webhook_secret' # Use environment variable (for webhook verification)
+
+# Razorpay Settings
+RAZORPAY_KEY_ID = 'your_razorpay_key_id'  # Replace with your actual key
+RAZORPAY_KEY_SECRET = 'your_razorpay_key_secret'  # Replace with your actual secret
+RAZORPAY_WEBHOOK_SECRET = 'your_razorpay_webhook_secret'  # Replace with your webhook secret

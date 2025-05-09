@@ -603,7 +603,7 @@ body::after {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     text-align: center;
     transition: transform 0.3s;
-}
+    }
 
 .admin-dashboard-overview .stat-card:hover {
     transform: translateY(-5px);
@@ -619,4 +619,4 @@ body::after {
     font-size: 2rem;
     font-weight: bold;
     color: #007bff;
-}
+} 

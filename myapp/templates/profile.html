@@ -3,100 +3,1493 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile - Madison</title>
+    <title>PROFILE // MADISON MAGAZINE</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'css/profile.css' %}">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #ff2d75;
+            --secondary-color: rgba(255, 255, 255, 0.85);
+            --accent-color: #ff5e9a;
+            --text-color: #333;
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-shadow: 0 8px 32px rgba(255, 45, 117, 0.2);
+            --sparkle-color: rgba(255, 255, 255, 0.7);
+            --error-color: #ff3860;
+            --success-color: #09c372;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--text-color);
+            background-image: url('https://i.pinimg.com/736x/37/79/c2/3779c27076520360ae90309c024e749c.jpg');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 182, 193, 0.3);
+            z-index: -1;
+        }
+
+        /* Sparkle animation */
+        @keyframes sparkle {
+            0% { transform: scale(0) rotate(0deg); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: scale(1.5) rotate(360deg); opacity: 0; }
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--sparkle-color);
+            pointer-events: none;
+            animation: sparkle 1.5s ease-out forwards;
+            z-index: 10;
+        }
+
+        /* Floating hearts animation */
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+
+        .floating-heart {
+            position: fixed;
+            pointer-events: none;
+            opacity: 0;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            animation: float 5s ease-in-out forwards;
+            z-index: 5;
+        }
+
+        .navbar {
+            background-color: var(--secondary-color);
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .navbar .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .navbar h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar ul {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar li {
+            margin-left: 2rem;
+        }
+
+        .navbar a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar a:hover {
+            color: var(--primary-color);
+        }
+
+        .navbar a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+
+        .navbar a:hover::after {
+            width: 100%;
+        }
+
+        .profile-container {
+            max-width: 1200px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 992px) {
+            .profile-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .profile-sidebar {
+            background: var(--secondary-color);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: var(--glass-shadow);
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+            position: relative;
+            height: fit-content;
+        }
+
+        .profile-sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        }
+
+        .profile-header {
+            padding: 2rem;
+            text-align: center;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .profile-image-container {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 1.5rem;
+            border: 3px solid var(--primary-color);
+            box-shadow: 0 4px 15px rgba(255, 45, 117, 0.3);
+            overflow: hidden;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .profile-image-container:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 45, 117, 0.4);
+        }
+
+        .profile-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-upload-btn {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            text-align: center;
+            padding: 0.5rem;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            cursor: pointer;
+        }
+
+        .profile-image-container:hover .profile-upload-btn {
+            opacity: 1;
+        }
+
+        .user-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0.5rem 0;
+            color: var(--primary-color);
+        }
+
+        .user-email {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 1rem;
+            word-break: break-all;
+        }
+
+        .profile-nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .profile-nav li {
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .profile-nav li:last-child {
+            border-bottom: none;
+        }
+
+        .profile-nav a {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            color: var(--text-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .profile-nav a:hover, .profile-nav a.active {
+            background: rgba(255, 45, 117, 0.1);
+            color: var(--primary-color);
+        }
+
+        .profile-nav a:hover::after, .profile-nav a.active::after {
+            content: '';
+            position: absolute;
+            right: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary-color);
+        }
+
+        .profile-nav i {
+            margin-right: 1rem;
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .profile-main {
+            background: var(--secondary-color);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: var(--glass-shadow);
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+        }
+
+        .profile-main::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        }
+
+        .profile-section {
+            padding: 2rem;
+            display: none;
+        }
+
+        .profile-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .section-header h2 {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-header h2 i {
+            font-size: 1.2rem;
+        }
+
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            font-family: 'Montserrat', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #e0005a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 45, 117, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 45, 117, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        .user-info-form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.7);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(255, 45, 117, 0.2);
+            background: white;
+        }
+
+        .input-field.error {
+            border-color: var(--error-color);
+        }
+
+        .error-message {
+            color: var(--error-color);
+            font-size: 0.8rem;
+            margin-top: 0.3rem;
+            display: none;
+        }
+
+        .success-message {
+            color: var(--success-color);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .interests-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .interest-item {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 0.8rem;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+
+        .interest-item:hover {
+            background: rgba(255, 45, 117, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .interest-item input[type="checkbox"] {
+            margin-right: 0.8rem;
+            accent-color: var(--primary-color);
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .subscription-card {
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .subscription-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: var(--primary-color);
+        }
+
+        .subscription-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .subscription-plan {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+
+        .subscription-badge {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .subscription-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .subscription-detail {
+            font-size: 0.9rem;
+        }
+
+        .subscription-detail strong {
+            display: block;
+            color: #666;
+            margin-bottom: 0.3rem;
+            font-weight: 500;
+        }
+
+        .no-subscription {
+            text-align: center;
+            padding: 3rem 2rem;
+        }
+
+        .no-subscription i {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .no-subscription h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .no-subscription p {
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        .history-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .history-card {
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        .history-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .history-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .history-card-content {
+            padding: 1.5rem;
+        }
+
+        .history-card h4 {
+            margin: 0 0 0.5rem 0;
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .history-card p {
+            margin: 0 0 1rem 0;
+            color: var(--text-color);
+            font-size: 0.9rem;
+        }
+
+        .history-card .date {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .history-card a {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .history-card a:hover {
+            background-color: #e0005a;
+            transform: translateY(-2px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            grid-column: 1 / -1;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .empty-state h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .empty-state p {
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        .password-form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .password-strength {
+            height: 4px;
+            background: #eee;
+            border-radius: 2px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--error-color);
+            transition: all 0.3s ease;
+        }
+
+        .password-strength.weak .password-strength-bar {
+            width: 30%;
+            background: var(--error-color);
+        }
+
+        .password-strength.medium .password-strength-bar {
+            width: 60%;
+            background: #ffb347;
+        }
+
+        .password-strength.strong .password-strength-bar {
+            width: 100%;
+            background: var(--success-color);
+        }
+
+        .password-hint {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 0.3rem;
+        }
+
+        .pending-articles-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .pending-article-card {
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        .pending-article-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .pending-article-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .pending-article-content {
+            padding: 1.5rem;
+        }
+
+        .pending-article-card h4 {
+            margin: 0 0 0.5rem 0;
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .pending-article-card p {
+            margin: 0 0 1rem 0;
+            color: var(--text-color);
+            font-size: 0.9rem;
+        }
+
+        .pending-article-card .date {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .status-badge {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+
+.status-published {
+    background: #D4EDDA;
+    color: #155724;
+}
+
+.status-pending {
+    background: #FFF3CD;
+    color: #856404;
+}
+
+.status-draft {
+    background: #E2E3E5;
+    color: #383D41;
+}
+
+.status-rejected {
+    background: #F8D7DA;
+    color: #721C24;
+}
+        }
+
+        .pending-article-card a {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .pending-article-card a:hover {
+            background-color: #e0005a;
+            transform: translateY(-2px);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .profile-container {
+                padding: 0 1rem;
+            }
+            
+            .history-list, .pending-articles-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .subscription-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
+    <!-- Sparkle effect container -->
+    <div id="sparkle-container"></div>
+
     <nav class="navbar">
         <div class="container">
-            <h1>Madison Magazine</h1>
+            <h1>MADISON MAGAZINE</h1>
             <ul>
-                <li><a href="{% url 'home' %}">Home</a></li>
-                <li><a href="{% url 'profile' %}">Profile</a></li>
-                <li><a href="{% url 'recommendations' %}">For You</a></li>
-                <li><a href="{% url 'logout' %}">Logout</a></li>
+                <li><a href="{% url 'home' %}"><i class="fas fa-home"></i> HOME</a></li>
+                <li><a href="{% url 'profile' %}" class="active"><i class="fas fa-user"></i> PROFILE</a></li>
+                <li><a href="{% url 'recommendations' %}"><i class="fas fa-heart"></i> FOR YOU</a></li>
+                <li><a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> LOGOUT</a></li>
             </ul>
         </div>
     </nav>
 
     <div class="profile-container">
-        <h2>User Profile</h2>
-        <form id="profile-form" method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="profile-picture">
-                <label for="profile-pic" id="file-label" class="file-label">Profile Picture</label>
-                <input type="file" id="profile-pic" name="profile_pic" accept="image/*" style="display: none;">
-                <div class="image-preview" id="image-preview">
-                    <img id="preview" src="{{ user.profile.profile_pic.url }}" alt="Profile Picture Preview">
+        <!-- Sidebar Navigation -->
+        <div class="profile-sidebar">
+            <div class="profile-header">
+                <div class="profile-image-container">
+                    <img src="{{ user.profile.profile_pic.url }}" alt="Profile Picture" class="profile-image" id="profile-image">
+                    <div class="profile-upload-btn" id="upload-profile-btn">
+                        <i class="fas fa-camera"></i> Change Photo
+                    </div>
+                    <input type="file" id="profile-upload" accept="image/*" style="display: none;">
                 </div>
-                <button type="button" id="set-dp" class="save-button" style="display: none;">Set as Profile Picture</button>
+                <h3 class="user-name">{{ user.first_name }} {{ user.last_name }}</h3>
+                <p class="user-email">{{ user.email }}</p>
             </div>
-            <div class="user-details">
-                <label for="name">Name:</label>
-                <input type="text" id="name" name="name" value="{{ user.first_name }} {{ user.last_name }}" required>
-                
-                <label for="bio">Bio:</label>
-                <textarea id="bio" name="bio">{{ user.bio }}</textarea>
-                
-                <label for="interests">Interests:</label>
-                <div class="interests">
-                    {% for category in categories %}
-                        <label>
-                            <input type="checkbox" name="interests" value="{{ category.id }}" {% if category in user_preferences.preferred_categories.all %}checked{% endif %}>
-                            {{ category.name }}
-                        </label>
-                    {% endfor %}
-                </div>
-            </div>
-            <button type="submit" class="save-button">Save Changes</button>
-            <a href="{% url 'home' %}" class="back-button">Back to Home</a>
-        </form>
-
-        <div class="preferences-section">
-            <h3>Your Interests</h3>
-            <form method="post" action="{% url 'update_preferences' %}">
-                {% csrf_token %}
-                <div class="categories-list">
-                    {% for category in categories %}
-                    <label>
-                        <input type="checkbox" name="categories" value="{{ category.id }}" 
-                               {% if category in user_preferences.preferred_categories.all %}checked{% endif %}>
-                        {{ category.name }}
-                    </label>
-                    {% endfor %}
-                </div>
-                <button type="submit" class="save-button">Update Preferences</button>
-            </form>
+            
+            <ul class="profile-nav">
+                <li><a href="#" class="active" data-section="user-info"><i class="fas fa-user-circle"></i> My Info</a></li>
+                <li><a href="#" data-section="subscription"><i class="fas fa-crown"></i> Subscription</a></li>
+                <li><a href="#" data-section="reading-history"><i class="fas fa-history"></i> Reading History</a></li>
+                <li><a href="#" data-section="bookmarks"><i class="fas fa-bookmark"></i> Bookmarks</a></li>
+                <li><a href="#" data-section="downloads"><i class="fas fa-download"></i> Downloads</a></li>
+                <li><a href="#" data-section="interactions"><i class="fas fa-heart"></i> Likes & Comments</a></li>
+                <li><a href="#" data-section="submissions"><i class="fas fa-pen"></i> My Submissions</a></li>
+                <li><a href="#" data-section="pending-articles"><i class="fas fa-clock"></i> Pending Approval</a></li>
+                <li><a href="#" data-section="password"><i class="fas fa-lock"></i> Update Password</a></li>
+            </ul>
         </div>
 
-        <div class="reading-history">
-            <h3>Reading History</h3>
-            <div class="history-list">
-                {% if history %}
-                    {% for viewed_article in history %}
-                        <div class="history-card">
-                            <img src="{{ viewed_article.article.image.url }}" alt="{{ viewed_article.article.title }}">
-                            <h4>{{ viewed_article.article.title }}</h4>
-                            <p>Viewed on: {{ viewed_article.viewed_at|date:"F j, Y" }}</p>
-                            <a href="{% url 'article_detail' viewed_article.article.id %}">Read more</a>
-                        </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="empty-state">
-                        <img src="{% static 'images/empty-state.png' %}" alt="No Reading History" class="empty-state-image">
-                        <p>No reading history available. Explore articles to start your journey!</p>
+        <!-- Main Content -->
+        <div class="profile-main">
+            <!-- User Info Section -->
+            <div class="profile-section active" id="user-info-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-user-circle"></i> My Information</h2>
+                </div>
+                
+                <form method="post" action="{% url 'edit_profile' %}" class="user-info-form" id="user-info-form" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="first_name">First Name</label>
+                        <input type="text" id="first_name" name="first_name" class="input-field" value="{{ user.first_name }}" required>
+                        <div class="error-message" id="first_name_error">Please enter a valid first name (letters only)</div>
                     </div>
+                    
+                    <div class="form-group">
+                        <label for="last_name">Last Name</label>
+                        <input type="text" id="last_name" name="last_name" class="input-field" value="{{ user.last_name }}" required>
+                        <div class="error-message" id="last_name_error">Please enter a valid last name (letters only)</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" class="input-field" value="{{ user.email }}" readonly>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Interests</label>
+                        <div class="interests-container">
+                            {% for category in categories %}
+                            <div class="interest-item">
+                                <input type="checkbox" id="category-{{ category.id }}" name="interests" value="{{ category.id }}" 
+                                    {% if category in user_preferences.preferred_categories.all %}checked{% endif %}>
+                                <label for="category-{{ category.id }}">{{ category.name }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="reset" class="btn btn-outline">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                    <div class="success-message" id="profile-success">Profile updated successfully!</div>
+                </form>
+            </div>
+
+            <!-- Subscription Section -->
+            <div class="profile-section" id="subscription-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-crown"></i> Subscription Plan</h2>
+                </div>
+                
+                {% if user_plan %}
+                <div class="subscription-card">
+                    <div class="subscription-status">
+                        <span class="subscription-plan">{{ user_plan.plan.name }} Plan</span>
+                        <span class="subscription-badge">ACTIVE</span>
+                    </div>
+                    
+                    <div class="subscription-details">
+                        <div class="subscription-detail">
+                            <strong>Started On</strong>
+                            {{ user_plan.start_date|date:"M d, Y" }}
+                        </div>
+                        <div class="subscription-detail">
+                            <strong>Expires On</strong>
+                            {{ user_plan.end_date|date:"M d, Y" }}
+                        </div>
+                        <div class="subscription-detail">
+                            <strong>Price</strong>
+                            ${{ user_plan.plan.price }}/month
+                        </div>
+                        <div class="subscription-detail">
+                            <strong>Auto Renew</strong>
+                            {% if user_plan.auto_renew %}Yes{% else %}No{% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <a href="{% url 'subscription' %}" class="btn btn-primary">Manage Subscription</a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="no-subscription">
+                    <i class="fas fa-crown"></i>
+                    <h3>No Active Subscription</h3>
+                    <p>Upgrade to Premium to unlock all features including unlimited downloads and ad-free reading.</p>
+                    <a href="{% url 'subscription' %}" class="btn btn-primary">Upgrade Now</a>
+                </div>
                 {% endif %}
+            </div>
+
+            <!-- Reading History Section -->
+            <div class="profile-section" id="reading-history-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-history"></i> Reading History</h2>
+                </div>
+                
+                {% if reading_history %}
+                <div class="history-list">
+                    {% for entry in reading_history %}
+                    <div class="history-card">
+                        <img src="{{ entry.article.image.url }}" alt="{{ entry.article.title }}">
+                        <div class="history-card-content">
+                            <h4>{{ entry.article.title|truncatechars:50 }}</h4>
+                            <p>{{ entry.article.description|truncatechars:100 }}</p>
+                            <p class="date">Read on {{ entry.timestamp|date:"M d, Y" }}</p>
+                            <a href="{% url 'article_detail' entry.article.id entry.article.slug %}">Read Again</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-history"></i>
+                    <h3>No Reading History Yet</h3>
+                    <p>Start exploring articles to build your reading history.</p>
+                    <a href="{% url 'home' %}" class="btn btn-primary">Browse Articles</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Bookmarks Section -->
+            <div class="profile-section" id="bookmarks-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-bookmark"></i> Bookmarked Articles</h2>
+                </div>
+                
+                {% if bookmarks %}
+                <div class="history-list">
+                    {% for bookmark in bookmarks %}
+                    <div class="history-card">
+                        <img src="{{ bookmark.article.image.url }}" alt="{{ bookmark.article.title }}">
+                        <div class="history-card-content">
+                            <h4>{{ bookmark.article.title|truncatechars:50 }}</h4>
+                            <p>{{ bookmark.article.description|truncatechars:100 }}</p>
+                            <p class="date">Bookmarked on {{ bookmark.timestamp|date:"M d, Y" }}</p>
+                            <a href="{% url 'article_detail' bookmark.article.id bookmark.article.slug %}">Read Article</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-bookmark"></i>
+                    <h3>No Bookmarks Yet</h3>
+                    <p>Save your favorite articles by clicking the bookmark icon.</p>
+                    <a href="{% url 'home' %}" class="btn btn-primary">Browse Articles</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Downloads Section -->
+            <div class="profile-section" id="downloads-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-download"></i> Downloaded Articles</h2>
+                </div>
+                
+                {% if user_plan %}
+                    {% if downloads %}
+                    <div class="history-list">
+                        {% for download in downloads %}
+                        <div class="history-card">
+                            <img src="{{ download.article.image.url }}" alt="{{ download.article.title }}">
+                            <div class="history-card-content">
+                                <h4>{{ download.article.title|truncatechars:50 }}</h4>
+                                <p>{{ download.article.description|truncatechars:100 }}</p>
+                                <p class="date">Downloaded on {{ download.timestamp|date:"M d, Y" }}</p>
+                                <a href="{{ download.article.pdf_file.url }}" download>Download Again</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-download"></i>
+                        <h3>No Downloads Yet</h3>
+                        <p>Download articles to read them offline anytime.</p>
+                        <a href="{% url 'home' %}" class="btn btn-primary">Browse Articles</a>
+                    </div>
+                    {% endif %}
+                {% else %}
+                <div class="empty-state premium-feature">
+                    <i class="fas fa-crown"></i>
+                    <h3>Premium Feature</h3>
+                    <p>Download articles for offline reading with a Premium subscription.</p>
+                    <a href="{% url 'subscription' %}" class="btn btn-primary">Upgrade Now</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Likes & Comments Section -->
+            <div class="profile-section" id="interactions-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-heart"></i> Likes & Comments</h2>
+                </div>
+                
+                {% if interactions %}
+                <div class="history-list">
+                    {% for interaction in interactions %}
+                    <div class="history-card">
+                        <img src="{{ interaction.article.image.url }}" alt="{{ interaction.article.title }}">
+                        <div class="history-card-content">
+                            <h4>{{ interaction.article.title|truncatechars:50 }}</h4>
+                            <p>
+                                {% if interaction.liked %}
+                                <i class="fas fa-heart" style="color: var(--primary-color);"></i> Liked
+                                {% endif %}
+                                {% if interaction.commented %}
+                                <i class="fas fa-comment" style="color: var(--primary-color);"></i> Commented
+                                {% endif %}
+                            </p>
+                            <p class="date">{{ interaction.timestamp|date:"M d, Y" }}</p>
+                            <a href="{% url 'article_detail' interaction.article.id interaction.article.slug %}">View Article</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-heart"></i>
+                    <h3>No Interactions Yet</h3>
+                    <p>Like and comment on articles to see them here.</p>
+                    <a href="{% url 'home' %}" class="btn btn-primary">Browse Articles</a>
+                </div>
+                {% endif %}
+            </div>
+
+<!-- Submissions Section -->
+<div class="profile-section" id="submissions-section">
+    <div class="section-header">
+        <h2><i class="fas fa-pen"></i> My Submissions</h2>
+    </div>
+    
+    {% if submissions %}
+    <div class="history-list">
+        {% for article in submissions %}
+        <div class="history-card">
+            <img src="{{ article.image.url }}" alt="{{ article.title }}">
+            <div class="history-card-content">
+                <h4>{{ article.title|truncatechars:50 }}</h4>
+                <p>{{ article.description|truncatechars:100 }}</p>
+                <p class="date">
+                    Submitted on {{ article.created_at|date:"M d, Y" }}
+                    <span class="status-badge status-{{ article.status }}">
+                        {{ article.status|title }}
+                    </span>
+                </p>
+                {% if article.status == 'published' %}
+                <a href="{% url 'article_detail' article.id article.slug %}">View Article</a>
+                {% elif article.status == 'pending' %}
+                <span class="status-badge">Pending Review</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-pen"></i>
+        <h3>No Submissions Yet</h3>
+        <p>Submit your own articles to share with the community.</p>
+        <a href="{% url 'add_article' %}" class="btn btn-primary">Write Article</a>
+    </div>
+    {% endif %}
+</div>
+
+
+            <!-- Update Password Section -->
+            <div class="profile-section" id="password-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-lock"></i> Update Password</h2>
+                </div>
+                
+                <form method="post" action="{% url 'update_password' %}" class="password-form" id="password-form">                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="current_password">Current Password</label>
+                        <input type="password" id="current_password" name="current_password" class="input-field" required>
+                        <div class="error-message" id="current_password_error">Please enter your current password</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="new_password">New Password</label>
+                        <input type="password" id="new_password" name="new_password" class="input-field" required>
+                        <div class="password-strength" id="password-strength">
+                            <div class="password-strength-bar"></div>
+                        </div>
+                        <div class="password-hint">Must be at least 8 characters long</div>
+                        <div class="error-message" id="new_password_error">Password must be at least 8 characters long</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirm_password">Confirm New Password</label>
+                        <input type="password" id="confirm_password" name="confirm_password" class="input-field" required>
+                        <div class="error-message" id="confirm_password_error">Passwords do not match</div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="reset" class="btn btn-outline" id="reset-password-btn">Reset</button>
+                        <button type="submit" class="btn btn-primary">Update Password</button>
+                    </div>
+                    <div class="success-message" id="password-success">Password updated successfully!</div>
+                </form>
             </div>
         </div>
     </div>
 
-    <footer class="footer">
-        <p>&copy; 2025 Madison Magazine. All rights reserved.</p>
-    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Create floating hearts animation
+        function createFloatingHeart() {
+            const heart = document.createElement('div');
+            heart.className = 'floating-heart';
+            heart.innerHTML = '❤️';
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.animationDuration = 3 + Math.random() * 7 + 's';
+            document.body.appendChild(heart);
+            
+            setTimeout(() => {
+                heart.remove();
+            }, 10000);
+        }
 
-    <script src="{% static 'js/profile.js' %}"></script>
+        // Create floating hearts periodically
+        setInterval(createFloatingHeart, 1000);
+
+        // Create sparkle effect on click
+        document.addEventListener('click', function(e) {
+            const sparkle = document.createElement('div');
+            sparkle.className = 'sparkle';
+            sparkle.style.left = e.clientX - 5 + 'px';
+            sparkle.style.top = e.clientY - 5 + 'px';
+            
+            document.getElementById('sparkle-container').appendChild(sparkle);
+            
+            // Remove sparkle after animation completes
+            setTimeout(() => {
+                sparkle.remove();
+            }, 1500);
+        });
+
+        // Section navigation
+        document.querySelectorAll('.profile-nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all links
+                document.querySelectorAll('.profile-nav a').forEach(item => {
+                    item.classList.remove('active');
+                });
+                
+                // Add active class to clicked link
+                this.classList.add('active');
+                
+                // Hide all sections
+                document.querySelectorAll('.profile-section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                
+                // Show selected section
+                const sectionId = this.getAttribute('data-section') + '-section';
+                document.getElementById(sectionId).classList.add('active');
+            });
+        });
+
+        // Profile picture upload
+        document.getElementById('upload-profile-btn').addEventListener('click', function() {
+            document.getElementById('profile-upload').click();
+        });
+
+        document.getElementById('profile-upload').addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('profile-image').src = event.target.result;
+                    
+                    // Submit the form to save the new profile picture
+                    const formData = new FormData();
+                    formData.append('profile_pic', e.target.files[0]);
+                    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+                    
+                    fetch("{% url 'edit_profile' %}", {
+                        method: 'POST',
+                        body: formData
+                    }).then(response => {
+                        if (response.ok) {
+                            const successMsg = document.getElementById('profile-success');
+                            successMsg.style.display = 'block';
+                            setTimeout(() => {
+                                successMsg.style.display = 'none';
+                            }, 3000);
+                        }
+                    });
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        // User info form validation
+        const userInfoForm = document.getElementById('user-info-form');
+        if (userInfoForm) {
+            const firstNameInput = document.getElementById('first_name');
+            const lastNameInput = document.getElementById('last_name');
+            const firstNameError = document.getElementById('first_name_error');
+            const lastNameError = document.getElementById('last_name_error');
+            
+            firstNameInput.addEventListener('input', function() {
+                if (!/^[a-zA-Z]+$/.test(this.value)) {
+                    this.classList.add('error');
+                    firstNameError.style.display = 'block';
+                } else {
+                    this.classList.remove('error');
+                    firstNameError.style.display = 'none';
+                }
+            });
+            
+            lastNameInput.addEventListener('input', function() {
+                if (!/^[a-zA-Z]+$/.test(this.value)) {
+                    this.classList.add('error');
+                    lastNameError.style.display = 'block';
+                } else {
+                    this.classList.remove('error');
+                    lastNameError.style.display = 'none';
+                }
+            });
+            
+            userInfoForm.addEventListener('submit', function(e) {
+                let isValid = true;
+                
+                if (!/^[a-zA-Z]+$/.test(firstNameInput.value)) {
+                    firstNameInput.classList.add('error');
+                    firstNameError.style.display = 'block';
+                    isValid = false;
+                }
+                
+                if (!/^[a-zA-Z]+$/.test(lastNameInput.value)) {
+                    lastNameInput.classList.add('error');
+                    lastNameError.style.display = 'block';
+                    isValid = false;
+                }
+                
+                if (!isValid) {
+                    e.preventDefault();
+                } else {
+                    // Show success message after form submission
+                    const successMsg = document.getElementById('profile-success');
+                    successMsg.style.display = 'block';
+                    setTimeout(() => {
+                        successMsg.style.display = 'none';
+                    }, 3000);
+                }
+            });
+        }
+
+        // Password form validation
+        const passwordForm = document.getElementById('password-form');
+        if (passwordForm) {
+            const currentPassword = document.getElementById('current_password');
+            const newPassword = document.getElementById('new_password');
+            const confirmPassword = document.getElementById('confirm_password');
+            const currentPasswordError = document.getElementById('current_password_error');
+            const newPasswordError = document.getElementById('new_password_error');
+            const confirmPasswordError = document.getElementById('confirm_password_error');
+            const passwordStrength = document.getElementById('password-strength');
+            const passwordStrengthBar = passwordStrength.querySelector('.password-strength-bar');
+            
+            newPassword.addEventListener('input', function() {
+                // Password strength calculation
+                const strength = calculatePasswordStrength(this.value);
+                
+                // Update strength bar
+                if (this.value.length === 0) {
+                    passwordStrength.className = 'password-strength';
+                    passwordStrengthBar.style.width = '0%';
+                } else if (strength < 3) {
+                    passwordStrength.className = 'password-strength weak';
+                } else if (strength < 6) {
+                    passwordStrength.className = 'password-strength medium';
+                } else {
+                    passwordStrength.className = 'password-strength strong';
+                }
+                
+                // Validate length
+                if (this.value.length < 8) {
+                    this.classList.add('error');
+                    newPasswordError.style.display = 'block';
+                } else {
+                    this.classList.remove('error');
+                    newPasswordError.style.display = 'none';
+                }
+                
+                // Check if passwords match
+                if (confirmPassword.value && this.value !== confirmPassword.value) {
+                    confirmPassword.classList.add('error');
+                    confirmPasswordError.style.display = 'block';
+                } else if (confirmPassword.value) {
+                    confirmPassword.classList.remove('error');
+                    confirmPasswordError.style.display = 'none';
+                }
+            });
+            
+            confirmPassword.addEventListener('input', function() {
+                if (this.value !== newPassword.value) {
+                    this.classList.add('error');
+                    confirmPasswordError.style.display = 'block';
+                } else {
+                    this.classList.remove('error');
+                    confirmPasswordError.style.display = 'none';
+                }
+            });
+            
+            // Reset button functionality
+            document.getElementById('reset-password-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                passwordForm.reset();
+                passwordStrength.className = 'password-strength';
+                passwordStrengthBar.style.width = '0%';
+                currentPassword.classList.remove('error');
+                newPassword.classList.remove('error');
+                confirmPassword.classList.remove('error');
+                currentPasswordError.style.display = 'none';
+                newPasswordError.style.display = 'none';
+                confirmPasswordError.style.display = 'none';
+            });
+            
+            passwordForm.addEventListener('submit', function(e) {
+                let isValid = true;
+                
+                if (!currentPassword.value) {
+                    currentPassword.classList.add('error');
+                    currentPasswordError.style.display = 'block';
+                    isValid = false;
+                }
+                
+                if (newPassword.value.length < 8) {
+                    newPassword.classList.add('error');
+                    newPasswordError.style.display = 'block';
+                    isValid = false;
+                }
+                
+                if (newPassword.value !== confirmPassword.value) {
+                    confirmPassword.classList.add('error');
+                    confirmPasswordError.style.display = 'block';
+                    isValid = false;
+                }
+                
+                if (!isValid) {
+                    e.preventDefault();
+                } else {
+                    // Submit the form via AJAX to prevent page reload
+                    e.preventDefault();
+                    const formData = new FormData(passwordForm);
+                    
+                    fetch(passwordForm.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    }).then(response => {
+                        if (response.ok) {
+                            // Show success message
+                            const successMsg = document.getElementById('password-success');
+                            successMsg.style.display = 'block';
+                            setTimeout(() => {
+                                successMsg.style.display = 'none';
+                            }, 3000);
+                            
+                            // Reset the form
+                            passwordForm.reset();
+                            passwordStrength.className = 'password-strength';
+                            passwordStrengthBar.style.width = '0%';
+                        } else {
+                            // Show error message
+                            Swal.fire({
+                                title: 'Error!',
+                                text: 'Failed to update password. Please check your current password.',
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    });
+                }
+            });
+            
+            function calculatePasswordStrength(password) {
+                let strength = 0;
+                
+                // Length contributes up to 4 points
+                strength += Math.min(4, Math.floor(password.length / 2));
+                
+                // Contains lowercase letter
+                if (/[a-z]/.test(password)) strength += 1;
+                
+                // Contains uppercase letter
+                if (/[A-Z]/.test(password)) strength += 1;
+                
+                // Contains number
+                if (/[0-9]/.test(password)) strength += 1;
+                
+                // Contains special character
+                if (/[^a-zA-Z0-9]/.test(password)) strength += 1;
+                
+                return strength;
+            }
+        }
+
+        // Display any Django messages as SweetAlert popups
+        {% if messages %}
+            {% for message in messages %}
+                Swal.fire({
+                    title: '{{ message.tags|title }}',
+                    text: '{{ message }}',
+                    icon: '{{ message.tags }}',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'glitter'
+                    }
+                });
+            {% endfor %}
+        {% endif %}
+    </script>
 </body>
-</html> 
+</html>
