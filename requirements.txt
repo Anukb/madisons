@@ -92,5 +92,4 @@ webdriver-manager==4.0.2
 websocket-client==1.8.0
 wsproto==1.2.0
 Pillow
-torch==2.6.0+cpu
 tensorflow==2.0.0
