@@ -92,4 +92,4 @@ webdriver-manager==4.0.2
 websocket-client==1.8.0
 wsproto==1.2.0
 Pillow
-tensorflow==2.0.0
+tensorflow==2.13.0  # updated version for Python 3.11
