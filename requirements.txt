@@ -92,3 +92,6 @@ webdriver-manager==4.0.2
 websocket-client==1.8.0
 wsproto==1.2.0
 tensorflow==2.13.0  # For Python 3.11 compatibility
+setuptools==65.5.1
+pip<24
+wheel<1.0
